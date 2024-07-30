@@ -6,6 +6,18 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  server: {
+    open: true,
+    port: 8080,
+    proxy: {
+      "/api": {
+        target: "http://localhost:8787",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+        ws: true,
+      },
+    },
+  },
   plugins: [
     remixCloudflareDevProxy(),
     remix({
