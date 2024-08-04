@@ -16,6 +16,10 @@ type Keys = {
   ArrowDown: boolean;
   ArrowLeft: boolean;
   ArrowRight: boolean;
+  w: boolean;
+  s: boolean;
+  a: boolean;
+  d: boolean;
 };
 
 export const AnimatedRect: React.FC<SmoothAvatarProps> = ({
@@ -27,6 +31,10 @@ export const AnimatedRect: React.FC<SmoothAvatarProps> = ({
     ArrowDown: false,
     ArrowLeft: false,
     ArrowRight: false,
+    w: false,
+    s: false,
+    a: false,
+    d: false,
   });
 
   const [position, setPosition] = useState({ x: 50, y: 50 });
@@ -66,10 +74,10 @@ export const AnimatedRect: React.FC<SmoothAvatarProps> = ({
       let dx = 0;
       let dy = 0;
 
-      if (keys.ArrowUp) dy -= 1;
-      if (keys.ArrowDown) dy += 1;
-      if (keys.ArrowLeft) dx -= 1;
-      if (keys.ArrowRight) dx += 1;
+      if (keys.ArrowUp || keys.w) dy -= 1;
+      if (keys.ArrowDown || keys.s) dy += 1;
+      if (keys.ArrowLeft || keys.a) dx -= 1;
+      if (keys.ArrowRight || keys.d) dx += 1;
 
       // Normalize diagonal movement
       if (dx !== 0 && dy !== 0) {
