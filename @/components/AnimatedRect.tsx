@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 const AVATAR_SIZE = 40;
 const SPEED = 900; // pixels per second
+const POSITION_UPDATE_THRESHOLD = 0.1;
 
 interface SmoothAvatarProps {
   width: number;
@@ -32,7 +33,7 @@ export const AnimatedRect: React.FC<SmoothAvatarProps> = ({
   const lastUpdateTime = useRef(Date.now());
   const animationFrameId = useRef<number | null>(null);
 
-  const [props, api] = useSpring(() => ({
+  const [animatedPosition, api] = useSpring(() => ({
     x: position.x,
     y: position.y,
     config: { tension: 170, friction: 26 },
@@ -81,11 +82,24 @@ export const AnimatedRect: React.FC<SmoothAvatarProps> = ({
       dx *= SPEED * deltaTime;
       dy *= SPEED * deltaTime;
 
-      setPosition((prevPos) => ({
-        x: Math.max(0, Math.min(width - AVATAR_SIZE, prevPos.x + dx)),
-        y: Math.max(0, Math.min(height - AVATAR_SIZE, prevPos.y + dy)),
-      }));
+      setPosition((prevPos) => {
+        const newX = Math.max(0, Math.min(width - AVATAR_SIZE, prevPos.x + dx));
+        const newY = Math.max(
+          0,
+          Math.min(height - AVATAR_SIZE, prevPos.y + dy)
+        );
 
+        const changeX = Math.abs(newX - prevPos.x);
+        const changeY = Math.abs(newY - prevPos.y);
+
+        if (
+          changeX > POSITION_UPDATE_THRESHOLD ||
+          changeY > POSITION_UPDATE_THRESHOLD
+        ) {
+          return { x: newX, y: newY };
+        }
+        return prevPos;
+      });
       animationFrameId.current = requestAnimationFrame(updatePosition);
     };
 
@@ -105,14 +119,14 @@ export const AnimatedRect: React.FC<SmoothAvatarProps> = ({
   const _AnimatedRect = animated("rect");
 
   return (
-    <_AnimatedRect
-      width={AVATAR_SIZE}
-      height={AVATAR_SIZE}
-      // eslint-disable-next-line react/prop-types
-      x={props.x}
-      // eslint-disable-next-line react/prop-types
-      y={props.y}
-      className={cn("fill-black")}
-    />
+    <>
+      <_AnimatedRect
+        width={AVATAR_SIZE}
+        height={AVATAR_SIZE}
+        x={animatedPosition.x}
+        y={animatedPosition.y}
+        className={cn("fill-black")}
+      />
+    </>
   );
 };
