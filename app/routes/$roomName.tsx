@@ -3,7 +3,10 @@ import { useParams } from "@remix-run/react";
 import useSWR from "swr";
 import { useRoom } from "@/hooks/useRoom";
 import { useViewBox } from "@/hooks/useViewBox";
-import { AnimatedRect } from "@/components/AnimatedRect";
+import { MyAvaterdRect } from "@/components/MyAvaterdRect";
+import { useAtomValue } from "jotai";
+import { activeUsersAtom, avaterPositionsAtom } from "@/atoms/atom";
+import { AvaterRect } from "@/components/AvaterRect";
 
 type Type = {
   roomId: string;
@@ -30,6 +33,11 @@ export default function Room() {
   useRoom(handle);
 
   const { viewBox, screenRef } = useViewBox();
+  const activeUsers = useAtomValue(activeUsersAtom);
+  const avaterPositions = useAtomValue(avaterPositionsAtom);
+
+  console.log("activeUsers", activeUsers);
+  console.log("avaterPositions", avaterPositions);
 
   return (
     <div className={cn("h-screen", "w-screen")} ref={screenRef}>
@@ -39,10 +47,18 @@ export default function Room() {
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
       >
         {/* 部屋の背景 */}
-        <rect width="100%" height="100%" fill="#f0f0f0" />
+        <rect width="100%" height="100%" className="fill-white" />
 
         {/* アバター */}
-        <AnimatedRect width={viewBox.width} height={viewBox.height} />
+        <MyAvaterdRect width={viewBox.width} height={viewBox.height} />
+
+        {/* 他のアバター */}
+        {activeUsers.map((userId) => {
+          const position = avaterPositions[userId];
+
+          if (!position) return null;
+          return <AvaterRect key={userId} position={position} />;
+        })}
       </svg>
     </div>
   );

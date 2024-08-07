@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSpring, animated } from "@react-spring/web";
-import { cn } from "@/lib/utils";
+import { useAtom, useAtomValue } from "jotai";
+import { isConnnectedAtom, myPositionAtom, socketAtom } from "@/atoms/atom";
+import { throttledSendPosition } from "@/websocket/command";
 
 const AVATAR_SIZE = 40;
 const SPEED = 900; // pixels per second
@@ -22,7 +24,7 @@ type Keys = {
   d: boolean;
 };
 
-export const AnimatedRect: React.FC<SmoothAvatarProps> = ({
+export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
   width,
   height,
 }) => {
@@ -37,7 +39,8 @@ export const AnimatedRect: React.FC<SmoothAvatarProps> = ({
     d: false,
   });
 
-  const [position, setPosition] = useState({ x: 50, y: 50 });
+  const [position, setPosition] = useAtom(myPositionAtom);
+  const isConnected = useAtomValue(isConnnectedAtom);
   const lastUpdateTime = useRef(Date.now());
   const animationFrameId = useRef<number | null>(null);
 
@@ -118,23 +121,27 @@ export const AnimatedRect: React.FC<SmoothAvatarProps> = ({
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [keys, width, height]);
+  }, [keys, width, height, setPosition]);
 
   useEffect(() => {
     api.start({ x: position.x, y: position.y });
   }, [position, api]);
 
-  const _AnimatedRect = animated("rect");
+  const socket = useAtomValue(socketAtom);
+
+  useEffect(() => {
+    if (socket && isConnected) {
+      throttledSendPosition(socket, position);
+    }
+  }, [socket, position, isConnected]);
 
   return (
-    <>
-      <_AnimatedRect
-        width={AVATAR_SIZE}
-        height={AVATAR_SIZE}
-        x={animatedPosition.x}
-        y={animatedPosition.y}
-        className={cn("fill-black")}
-      />
-    </>
+    <animated.rect
+      width={AVATAR_SIZE}
+      height={AVATAR_SIZE}
+      x={animatedPosition.x}
+      y={animatedPosition.y}
+      fill="red"
+    />
   );
 };

@@ -1,60 +1,21 @@
+import {
+  activeUsersAtom,
+  avaterPositionsAtom,
+  isConnnectedAtom,
+  socketAtom,
+} from "@/atoms/atom";
+import { sendCommand } from "@/websocket/command";
+import { ServerResponse } from "@/websocket/response";
+import { useAtom, useSetAtom } from "jotai";
 import { useEffect, useState, useCallback } from "react";
 
-// コマンドの型定義（サーバー側と共通）
-type CommandType = "RequestId" | "UpdatePosition" | "Ping" | "Error";
-
-interface BaseCommand {
-  type: CommandType;
-  timestamp: number;
-}
-
-interface RequestIdCommand extends BaseCommand {
-  type: "RequestId";
-}
-
-interface UpdatePositionCommand extends BaseCommand {
-  type: "UpdatePosition";
-  userId: string;
-  data: {
-    x: number;
-    y: number;
-  };
-}
-
-interface PingCommand extends BaseCommand {
-  type: "Ping";
-}
-
-interface ErrorCommand extends BaseCommand {
-  type: "Error";
-  error: string;
-}
-
-type Command =
-  | RequestIdCommand
-  | UpdatePositionCommand
-  | PingCommand
-  | ErrorCommand;
-
-// サーバーレスポンスの型
-interface ServerResponse<T = unknown> {
-  type: CommandType;
-  status: "success" | "error";
-  data?: T;
-  error?: string;
-}
-
-export const sendCommand = (socket: WebSocket, command: Command) => {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(command));
-  } else {
-    console.error("WebSocket is not open. ReadyState:", socket.readyState);
-  }
-};
-
 export const useRoom = (roomId: string) => {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [socket, setSocket] = useAtom(socketAtom);
+
+  const setAvaterPositions = useSetAtom(avaterPositionsAtom);
+  const setActiveUsers = useSetAtom(activeUsersAtom);
+
+  const [isConnected, setIsConnected] = useAtom(isConnnectedAtom);
   const [error, setError] = useState<string | null>(null);
 
   const connect = useCallback(() => {
@@ -62,9 +23,9 @@ export const useRoom = (roomId: string) => {
 
     ws.onopen = () => {
       console.log("WebSocket接続が確立されました");
+      sendCommand(ws, { type: "Ping", initial: true });
       setIsConnected(true);
       setError(null);
-      sendCommand(ws, { type: "RequestId", timestamp: Date.now() });
     };
 
     ws.onmessage = (event) => {
@@ -73,21 +34,29 @@ export const useRoom = (roomId: string) => {
         console.log("Received:", response);
 
         switch (response.type) {
-          case "RequestId":
-            // RequestIdの処理
-            console.log(response.data);
+          case "CurrentStatus":
+            setActiveUsers(response.data.userIds);
+            setAvaterPositions(response.data.positions);
+            break;
+          case "UpdateActiveUser":
+            setActiveUsers(response.data.userIds);
             break;
           case "UpdatePosition":
             // UpdatePositionの処理
+            setAvaterPositions((pref) => {
+              return {
+                ...pref,
+                [response.data.userId]: {
+                  x: response.data.x,
+                  y: response.data.y,
+                },
+              };
+            });
             break;
           case "Ping":
-            console.log(response);
-            break;
-          case "Error":
-            setError(response.error || "Unknown error occurred");
             break;
           default:
-            console.warn("Unknown response type:", response.type);
+            console.warn("Unknown response type:", response);
         }
       } catch (err) {
         console.error("Failed to parse server message:", err);
@@ -108,7 +77,7 @@ export const useRoom = (roomId: string) => {
     setSocket(ws);
 
     return ws;
-  }, [roomId]);
+  }, [roomId, setActiveUsers, setAvaterPositions, setSocket, setIsConnected]);
 
   useEffect(() => {
     const ws = connect();
@@ -136,7 +105,7 @@ export const useRoom = (roomId: string) => {
         reconnect();
         return;
       }
-      sendCommand(socket, { type: "Ping", timestamp: Date.now() });
+      sendCommand(socket, { type: "Ping", initial: false });
     }, 5000);
 
     return () => {
