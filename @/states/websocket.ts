@@ -1,6 +1,10 @@
-import { sendCommand } from "@/websocket/command";
+import {
+  sendCommand,
+  throttledSendColor,
+  throttledSendPosition,
+} from "@/websocket/command";
 import { ServerResponse } from "@/websocket/response";
-import { updateActiveUsers, usersState } from "./avater";
+import { myColor, myState, updateActiveUsers, usersState } from "./avater";
 import { proxy, ref, subscribe } from "valtio";
 
 export const websocketState = proxy({
@@ -38,6 +42,13 @@ export const websocketConnect = (roomId: string) => {
           // UpdateActiveUserの処理
           updateActiveUsers(response.data.userIds);
           break;
+        case "UpdateColor":
+          usersState.users.find(
+            (user) => user.id === response.data.userId
+          )!.color = response.data.color;
+          break;
+
+          break;
         case "UpdatePosition":
           // UpdatePositionの処理
           usersState.users.find(
@@ -71,6 +82,13 @@ if (typeof window !== "undefined") {
   subscribe(websocketState, () => {
     if (!websocketState.isConnected && websocketState.roomId.length > 0) {
       websocketConnect(websocketState.roomId);
+    }
+  });
+
+  subscribe(websocketState, () => {
+    if (websocketState.isConnected && websocketState.socketRef.socket) {
+      throttledSendPosition(websocketState.socketRef.socket, myState.position);
+      throttledSendColor(websocketState.socketRef.socket, myColor.color);
     }
   });
 }

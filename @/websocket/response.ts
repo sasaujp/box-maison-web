@@ -1,5 +1,6 @@
 export type ResponseType =
   | "UpdatePosition"
+  | "UpdateColor"
   | "UpdateActiveUser"
   | "CurrentStatus"
   | "Ping";
@@ -15,6 +16,14 @@ interface UpdatePositionResponse extends BaseResponse {
     userId: string;
     x: number;
     y: number;
+  };
+}
+
+interface UpdateColorResponse extends BaseResponse {
+  type: "UpdateColor";
+  data: {
+    userId: string;
+    color: string;
   };
 }
 
@@ -47,6 +56,7 @@ export const sendResponse = (socket: WebSocket, response: ServerResponse) => {
 // すべてのコマンドの型
 export type ServerResponse =
   | UpdatePositionResponse
+  | UpdateColorResponse
   | UpdateActiveUserResponse
   | CurrentStatusResponse
   | PingResponse;

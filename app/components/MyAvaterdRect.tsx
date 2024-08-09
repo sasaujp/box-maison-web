@@ -1,16 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSpring, animated } from "@react-spring/web";
-import { myState } from "@/states/avater";
-import { websocketState } from "@/states/websocket";
-
-import { throttledSendPosition } from "@/websocket/command";
+import { myColor, myState } from "@/states/avater";
 import { useSnapshot } from "valtio";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "~/components/ui/context-menu";
 
 const AVATAR_SIZE = 40;
 const SPEED = 900; // pixels per second
@@ -48,15 +39,19 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
   });
 
   const my = useSnapshot(myState);
-  const { isConnected, socketRef } = useSnapshot(websocketState);
   const lastUpdateTime = useRef(Date.now());
   const animationFrameId = useRef<number | null>(null);
 
   const [animatedPosition, api] = useSpring(() => ({
     x: my.position.x,
     y: my.position.y,
-    config: { tension: 170, friction: 26 },
+    config: { tension: 300, friction: 20 },
   }));
+
+  const { color } = useSpring({
+    color: myColor.color,
+    config: { tension: 300, friction: 20 },
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -137,39 +132,13 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
     api.start({ x: my.position.x, y: my.position.y });
   }, [my, api]);
 
-  useEffect(() => {
-    if (isConnected && socketRef.socket) {
-      throttledSendPosition(socketRef.socket, my.position);
-    }
-  }, [socketRef, isConnected, my]);
-
   return (
-    <>
-      <animated.rect
-        width={AVATAR_SIZE}
-        height={AVATAR_SIZE}
-        x={animatedPosition.x}
-        y={animatedPosition.y}
-        fill="red"
-      />
-
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <rect
-            width={AVATAR_SIZE}
-            height={AVATAR_SIZE}
-            x={my.position.x}
-            y={my.position.y}
-            fill="fill-red-500/20"
-          />
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem>Profile</ContextMenuItem>
-          <ContextMenuItem>Billing</ContextMenuItem>
-          <ContextMenuItem>Team</ContextMenuItem>
-          <ContextMenuItem>Subscription</ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-    </>
+    <animated.rect
+      width={AVATAR_SIZE}
+      height={AVATAR_SIZE}
+      x={animatedPosition.x}
+      y={animatedPosition.y}
+      fill={color}
+    />
   );
 };
