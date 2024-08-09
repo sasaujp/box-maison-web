@@ -1,12 +1,12 @@
-import { cn } from "@/lib/utils";
+import { cn } from "~/lib/utils";
 import { useParams } from "@remix-run/react";
 import { useRoom } from "@/hooks/useRoom";
 import { useViewBox } from "@/hooks/useViewBox";
-import { MyAvaterdRect } from "@/components/MyAvaterdRect";
+import { MyAvaterdRect } from "~/components/MyAvaterdRect";
 import { usersState } from "@/states/avater";
 import { useSnapshot } from "valtio";
 import { websocketState } from "@/states/websocket";
-import { AvaterRect } from "@/components/AvaterRect";
+import { AvaterRect } from "~/components/AvaterRect";
 
 export default function Room() {
   const { roomName } = useParams();

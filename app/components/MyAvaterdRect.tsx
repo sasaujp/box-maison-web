@@ -5,6 +5,12 @@ import { websocketState } from "@/states/websocket";
 
 import { throttledSendPosition } from "@/websocket/command";
 import { useSnapshot } from "valtio";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "~/components/ui/context-menu";
 
 const AVATAR_SIZE = 40;
 const SPEED = 900; // pixels per second
@@ -138,12 +144,32 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
   }, [socketRef, isConnected, my]);
 
   return (
-    <animated.rect
-      width={AVATAR_SIZE}
-      height={AVATAR_SIZE}
-      x={animatedPosition.x}
-      y={animatedPosition.y}
-      fill="red"
-    />
+    <>
+      <animated.rect
+        width={AVATAR_SIZE}
+        height={AVATAR_SIZE}
+        x={animatedPosition.x}
+        y={animatedPosition.y}
+        fill="red"
+      />
+
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <rect
+            width={AVATAR_SIZE}
+            height={AVATAR_SIZE}
+            x={my.position.x}
+            y={my.position.y}
+            fill="fill-red-500/20"
+          />
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem>Profile</ContextMenuItem>
+          <ContextMenuItem>Billing</ContextMenuItem>
+          <ContextMenuItem>Team</ContextMenuItem>
+          <ContextMenuItem>Subscription</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    </>
   );
 };
