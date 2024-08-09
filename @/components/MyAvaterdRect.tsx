@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSpring, animated } from "@react-spring/web";
-import { useAtom, useAtomValue } from "jotai";
-import { isConnnectedAtom, myPositionAtom, socketAtom } from "@/atoms/atom";
+import { myState } from "@/states/avater";
+import { websocketState } from "@/states/websocket";
+
 import { throttledSendPosition } from "@/websocket/command";
+import { useSnapshot } from "valtio";
 
 const AVATAR_SIZE = 40;
 const SPEED = 900; // pixels per second
@@ -39,14 +41,14 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
     d: false,
   });
 
-  const [position, setPosition] = useAtom(myPositionAtom);
-  const isConnected = useAtomValue(isConnnectedAtom);
+  const my = useSnapshot(myState);
+  const { isConnected, socketRef } = useSnapshot(websocketState);
   const lastUpdateTime = useRef(Date.now());
   const animationFrameId = useRef<number | null>(null);
 
   const [animatedPosition, api] = useSpring(() => ({
-    x: position.x,
-    y: position.y,
+    x: my.position.x,
+    y: my.position.y,
     config: { tension: 170, friction: 26 },
   }));
 
@@ -93,24 +95,26 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
       dx *= SPEED * deltaTime;
       dy *= SPEED * deltaTime;
 
-      setPosition((prevPos) => {
-        const newX = Math.max(0, Math.min(width - AVATAR_SIZE, prevPos.x + dx));
-        const newY = Math.max(
-          0,
-          Math.min(height - AVATAR_SIZE, prevPos.y + dy)
-        );
+      const newX = Math.max(
+        0,
+        Math.min(width - AVATAR_SIZE, myState.position.x + dx)
+      );
+      const newY = Math.max(
+        0,
+        Math.min(height - AVATAR_SIZE, myState.position.y + dy)
+      );
 
-        const changeX = Math.abs(newX - prevPos.x);
-        const changeY = Math.abs(newY - prevPos.y);
+      const changeX = Math.abs(newX - myState.position.x);
+      const changeY = Math.abs(newY - myState.position.y);
 
-        if (
-          changeX > POSITION_UPDATE_THRESHOLD ||
-          changeY > POSITION_UPDATE_THRESHOLD
-        ) {
-          return { x: newX, y: newY };
-        }
-        return prevPos;
-      });
+      if (
+        changeX > POSITION_UPDATE_THRESHOLD ||
+        changeY > POSITION_UPDATE_THRESHOLD
+      ) {
+        myState.position.x = newX;
+        myState.position.y = newY;
+      }
+      // return prevPos;
       animationFrameId.current = requestAnimationFrame(updatePosition);
     };
 
@@ -121,19 +125,17 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [keys, width, height, setPosition]);
+  }, [keys, width, height]);
 
   useEffect(() => {
-    api.start({ x: position.x, y: position.y });
-  }, [position, api]);
-
-  const socket = useAtomValue(socketAtom);
+    api.start({ x: my.position.x, y: my.position.y });
+  }, [my, api]);
 
   useEffect(() => {
-    if (socket && isConnected) {
-      throttledSendPosition(socket, position);
+    if (isConnected && socketRef.socket) {
+      throttledSendPosition(socketRef.socket, my.position);
     }
-  }, [socket, position, isConnected]);
+  }, [socketRef, isConnected, my]);
 
   return (
     <animated.rect

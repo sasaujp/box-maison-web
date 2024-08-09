@@ -21,8 +21,7 @@ interface UpdatePositionResponse extends BaseResponse {
 export interface CurrentStatusResponse extends BaseResponse {
   type: "CurrentStatus";
   data: {
-    userIds: string[];
-    positions: Record<string, { x: number; y: number }>;
+    users: Record<string, { position: { x: number; y: number } }>;
   };
 }
 
