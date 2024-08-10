@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSpring, animated } from "@react-spring/web";
 import { myColor, myState } from "@/states/avater";
 import { useSnapshot } from "valtio";
+import { ReactionBubble } from "./ReactionBubble";
 
 const AVATAR_SIZE = 40;
 const SPEED = 900; // pixels per second
@@ -47,6 +48,11 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
     y: my.position.y,
     config: { tension: 300, friction: 20 },
   }));
+
+  const animateTransform = useSpring({
+    transform: `translate(${my.position.x}, ${my.position.y})`,
+    config: { tension: 300, friction: 20 },
+  });
 
   const { color } = useSpring({
     color: myColor.color,
@@ -131,14 +137,21 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
   useEffect(() => {
     api.start({ x: my.position.x, y: my.position.y });
   }, [my, api]);
-
+  console.log("my", my.reaction);
   return (
-    <animated.rect
-      width={AVATAR_SIZE}
-      height={AVATAR_SIZE}
-      x={animatedPosition.x}
-      y={animatedPosition.y}
-      fill={color}
-    />
+    <>
+      <animated.rect
+        width={AVATAR_SIZE}
+        height={AVATAR_SIZE}
+        x={animatedPosition.x}
+        y={animatedPosition.y}
+        fill={color}
+      />
+      {my.reaction && (
+        <animated.g transform={animateTransform.transform}>
+          <ReactionBubble reaction={my.reaction} />
+        </animated.g>
+      )}
+    </>
   );
 };

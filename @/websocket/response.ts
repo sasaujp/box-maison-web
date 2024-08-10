@@ -39,7 +39,10 @@ interface UpdateReactionResponse extends BaseResponse {
 export interface CurrentStatusResponse extends BaseResponse {
   type: "CurrentStatus";
   data: {
-    users: Record<string, { position: { x: number; y: number } }>;
+    users: Record<
+      string,
+      { position: { x: number; y: number }; color: string }
+    >;
   };
 }
 

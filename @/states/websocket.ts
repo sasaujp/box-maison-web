@@ -4,7 +4,13 @@ import {
   throttledSendPosition,
 } from "@/websocket/command";
 import { ServerResponse } from "@/websocket/response";
-import { myColor, myState, updateActiveUsers, usersState } from "./avater";
+import {
+  addReaction,
+  myColor,
+  myState,
+  updateActiveUsers,
+  usersState,
+} from "./avater";
 import { proxy, ref, subscribe } from "valtio";
 
 export const websocketState = proxy({
@@ -36,6 +42,8 @@ export const websocketConnect = (roomId: string) => {
             ([id, user]) => ({
               id,
               position: user.position,
+              color: user.color,
+              reaction: null,
             })
           );
           break;
@@ -56,6 +64,7 @@ export const websocketConnect = (roomId: string) => {
           break;
         case "UpdateReaction":
           // UpdateReactionの処理
+          addReaction(response.data.userId, response.data.reaction);
           break;
         case "Ping":
           break;

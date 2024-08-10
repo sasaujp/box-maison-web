@@ -2,7 +2,7 @@ import { cn } from "~/lib/utils";
 import { useParams } from "@remix-run/react";
 import { useViewBox } from "@/hooks/useViewBox";
 import { MyAvaterdRect } from "~/components/MyAvaterdRect";
-import { myColor, usersState } from "@/states/avater";
+import { addReaction, myColor, usersState } from "@/states/avater";
 import { useSnapshot } from "valtio";
 import { disconnect, websocketState } from "@/states/websocket";
 import { AvaterRect } from "~/components/AvaterRect";
@@ -42,6 +42,9 @@ export default function Room() {
   return (
     <div className={cn("h-screen", "w-screen")} ref={screenRef}>
       <svg
+        onClick={() => {
+          colorPicker.isOpen = false;
+        }}
         width={viewBox.width}
         height={viewBox.height}
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
@@ -50,11 +53,18 @@ export default function Room() {
         <rect width="100%" height="100%" className="fill-slate-100" />
 
         {/* 他のアバター */}
-        {users.users.map(({ id, position, color }) => {
+        {users.users.map(({ id, position, color, reaction }) => {
           if (!position) {
             return null;
           }
-          return <AvaterRect key={id} position={position} color={color} />;
+          return (
+            <AvaterRect
+              key={id}
+              position={position}
+              color={color}
+              reaction={reaction}
+            />
+          );
         })}
 
         {/* 自分のアバター */}
@@ -79,8 +89,8 @@ export default function Room() {
                 <Button
                   key={reaction}
                   onClick={() => {
-                    console.log(reaction);
                     sendReaction(reaction);
+                    addReaction(null, reaction);
                   }}
                   variant="outline"
                   className="rounded-full w-10 h-10 shadow-2xl"
