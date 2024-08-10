@@ -1,6 +1,7 @@
 export type ResponseType =
   | "UpdatePosition"
   | "UpdateColor"
+  | "UpdateReaction"
   | "UpdateActiveUser"
   | "CurrentStatus"
   | "Ping";
@@ -24,6 +25,14 @@ interface UpdateColorResponse extends BaseResponse {
   data: {
     userId: string;
     color: string;
+  };
+}
+
+interface UpdateReactionResponse extends BaseResponse {
+  type: "UpdateReaction";
+  data: {
+    userId: string;
+    reaction: string;
   };
 }
 
@@ -57,6 +66,7 @@ export const sendResponse = (socket: WebSocket, response: ServerResponse) => {
 export type ServerResponse =
   | UpdatePositionResponse
   | UpdateColorResponse
+  | UpdateReactionResponse
   | UpdateActiveUserResponse
   | CurrentStatusResponse
   | PingResponse;

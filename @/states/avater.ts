@@ -30,13 +30,13 @@ export const updateActiveUsers = (userIds: string[]) => {
 if (typeof window !== "undefined") {
   subscribe(myState, () => {
     if (websocketState.isConnected && websocketState.socketRef.socket) {
-      throttledSendPosition(websocketState.socketRef.socket, myState.position);
+      throttledSendPosition(myState.position);
     }
   });
 
   subscribe(myColor, () => {
     if (websocketState.isConnected && websocketState.socketRef.socket) {
-      throttledSendColor(websocketState.socketRef.socket, myColor.color);
+      throttledSendColor(myColor.color);
     }
   });
 }

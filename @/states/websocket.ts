@@ -11,16 +11,17 @@ export const websocketState = proxy({
   roomId: "",
   socketRef: ref<{ socket?: WebSocket }>({}),
   isConnected: false,
+  waitConnectTimer: null as NodeJS.Timeout | null,
 });
 
 export const websocketConnect = (roomId: string) => {
-  console.log("WebSocket", WebSocket);
   const ws = new WebSocket(`/api/ws/${roomId}`);
   console.log("WebSocket接続中...");
   ws.onopen = () => {
     console.log("WebSocket接続が確立されました");
-    sendCommand(ws, { type: "Ping", initial: true });
+    sendCommand({ type: "Ping", initial: true });
     websocketState.isConnected = true;
+    websocketState.waitConnectTimer = null;
     // setError(null);
   };
 
@@ -47,13 +48,14 @@ export const websocketConnect = (roomId: string) => {
             (user) => user.id === response.data.userId
           )!.color = response.data.color;
           break;
-
-          break;
         case "UpdatePosition":
           // UpdatePositionの処理
           usersState.users.find(
             (user) => user.id === response.data.userId
           )!.position = response.data;
+          break;
+        case "UpdateReaction":
+          // UpdateReactionの処理
           break;
         case "Ping":
           break;
@@ -68,6 +70,7 @@ export const websocketConnect = (roomId: string) => {
   ws.onerror = (error) => {
     console.error("WebSocketエラー:", error);
     // setError("WebSocket connection error");
+    websocketState.waitConnectTimer = null;
   };
 
   ws.onclose = (event) => {
@@ -78,17 +81,53 @@ export const websocketConnect = (roomId: string) => {
   websocketState.socketRef.socket = ws;
 };
 
+export const disconnect = () => {
+  if (websocketState.waitConnectTimer) {
+    clearTimeout(websocketState.waitConnectTimer);
+    websocketState.waitConnectTimer = null;
+  }
+  if (websocketState.socketRef.socket) {
+    if (websocketState.socketRef.socket.readyState === WebSocket.OPEN) {
+      websocketState.socketRef.socket.close();
+    }
+  }
+  websocketState.socketRef.socket = undefined;
+  websocketState.isConnected = false;
+  websocketState.roomId = "";
+};
+
+const ping = () => {
+  setTimeout(() => {
+    sendCommand({ type: "Ping", initial: false });
+    if (
+      websocketState.socketRef.socket &&
+      websocketState.socketRef.socket.readyState === WebSocket.OPEN &&
+      websocketState.isConnected
+    ) {
+      ping();
+    }
+  }, 5000);
+};
+
 if (typeof window !== "undefined") {
   subscribe(websocketState, () => {
-    if (!websocketState.isConnected && websocketState.roomId.length > 0) {
-      websocketConnect(websocketState.roomId);
+    if (
+      !websocketState.isConnected &&
+      !websocketState.waitConnectTimer &&
+      websocketState.roomId.length > 0
+    ) {
+      // 0.5秒待つ
+      websocketState.waitConnectTimer = setTimeout(() => {
+        websocketConnect(websocketState.roomId);
+      }, 500);
     }
   });
 
   subscribe(websocketState, () => {
     if (websocketState.isConnected && websocketState.socketRef.socket) {
-      throttledSendPosition(websocketState.socketRef.socket, myState.position);
-      throttledSendColor(websocketState.socketRef.socket, myColor.color);
+      throttledSendPosition(myState.position);
+      throttledSendColor(myColor.color);
+      ping();
     }
   });
 }

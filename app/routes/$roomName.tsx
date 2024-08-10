@@ -1,15 +1,18 @@
 import { cn } from "~/lib/utils";
 import { useParams } from "@remix-run/react";
-import { useRoom } from "@/hooks/useRoom";
 import { useViewBox } from "@/hooks/useViewBox";
 import { MyAvaterdRect } from "~/components/MyAvaterdRect";
 import { myColor, usersState } from "@/states/avater";
 import { useSnapshot } from "valtio";
-import { websocketState } from "@/states/websocket";
+import { disconnect, websocketState } from "@/states/websocket";
 import { AvaterRect } from "~/components/AvaterRect";
 import { Button } from "~/components/ui/button";
 import Skech from "@uiw/react-color-sketch";
 import { colorPicker } from "@/states/ui";
+import { sendReaction } from "@/websocket/command";
+import { useEffect } from "react";
+
+const REACTIONS = ["👍", "👋", "😊", "🎉", "❤️"];
 
 export default function Room() {
   const { roomName } = useParams();
@@ -25,7 +28,11 @@ export default function Room() {
 
   websocketState.roomId = handle;
 
-  useRoom();
+  useEffect(() => {
+    return () => {
+      disconnect();
+    };
+  }, []);
 
   const { viewBox, screenRef } = useViewBox();
   const users = useSnapshot(usersState);
@@ -54,7 +61,7 @@ export default function Room() {
         <MyAvaterdRect width={viewBox.width} height={viewBox.height} />
       </svg>
       <div className="absolute bottom-8 right-8 flex flex-col-reverse justify-start items-center">
-        <div className="bg-yellow-50/50 h-40 w-64 shadow-2xl rounded-2xl p-4">
+        <div className="bg-yellow-50/50 w-64 shadow-2xl rounded-2xl p-4">
           <div className="flex w-full justify-center">
             <Button
               onClick={() => {
@@ -64,7 +71,24 @@ export default function Room() {
               style={{
                 backgroundColor: color,
               }}
-            ></Button>
+            />
+          </div>
+          <div className="flex justify-between mt-4">
+            {REACTIONS.map((reaction) => {
+              return (
+                <Button
+                  key={reaction}
+                  onClick={() => {
+                    console.log(reaction);
+                    sendReaction(reaction);
+                  }}
+                  variant="outline"
+                  className="rounded-full w-10 h-10 shadow-2xl"
+                >
+                  {reaction}
+                </Button>
+              );
+            })}
           </div>
         </div>
         {isOpen && (
