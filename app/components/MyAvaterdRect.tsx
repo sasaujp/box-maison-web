@@ -137,7 +137,6 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
   useEffect(() => {
     api.start({ x: my.position.x, y: my.position.y });
   }, [my, api]);
-  console.log("my", my.reaction);
   return (
     <>
       <animated.rect

@@ -12,7 +12,7 @@ import { colorPicker } from "@/states/ui";
 import { sendReaction } from "@/websocket/command";
 import { useEffect } from "react";
 
-const REACTIONS = ["👍", "👋", "😊", "🎉", "❤️"];
+const REACTIONS = ["❗", "👍", "😊", "🎉", "👋"];
 
 export default function Room() {
   const { roomName } = useParams();
@@ -93,7 +93,7 @@ export default function Room() {
                     addReaction(null, reaction);
                   }}
                   variant="outline"
-                  className="rounded-full w-10 h-10 shadow-2xl"
+                  className="rounded-full w-10 h-10 shadow-2xl text-xl"
                 >
                   {reaction}
                 </Button>

@@ -20,7 +20,7 @@ export const ReactionBubble: React.FC<{
       <text
         x="25"
         y="23"
-        fontSize="20"
+        className="text-2xl"
         textAnchor="middle"
         dominantBaseline="middle"
       >
