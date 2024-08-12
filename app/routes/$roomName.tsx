@@ -2,7 +2,7 @@ import { cn } from "~/lib/utils";
 import { useParams } from "@remix-run/react";
 import { useViewBox } from "@/hooks/useViewBox";
 import { MyAvaterdRect } from "~/components/MyAvaterdRect";
-import { addReaction, myColor, usersState } from "@/states/avater";
+import { addReaction, myColor, myState, usersState } from "@/states/avater";
 import { useSnapshot } from "valtio";
 import { disconnect, websocketState } from "@/states/websocket";
 import { AvaterRect } from "~/components/AvaterRect";
@@ -14,6 +14,8 @@ import { useEffect } from "react";
 
 const REACTIONS = ["❗", "👍", "😊", "🎉", "👋"];
 
+const RoomWidth = 3500;
+const RoomHeight = 1000;
 export default function Room() {
   const { roomName } = useParams();
   const handle = roomName?.startsWith("@") ? roomName.slice(1) : null;
@@ -29,6 +31,7 @@ export default function Room() {
   websocketState.roomId = handle;
 
   useEffect(() => {
+    myState.position = { x: RoomWidth / 2 - 20, y: RoomHeight / 2 - 20 };
     return () => {
       disconnect();
     };
@@ -38,6 +41,31 @@ export default function Room() {
   const users = useSnapshot(usersState);
   const { color } = useSnapshot(myColor);
   const { isOpen } = useSnapshot(colorPicker);
+  const { position } = useSnapshot(myState);
+
+  const bounceWidth = (() => {
+    if (position.x < viewBox.width / 2) {
+      return (viewBox.width / 2 - position.x) * 0.5;
+    }
+
+    if (position.x < RoomWidth - viewBox.width / 2) {
+      return 0;
+    }
+    return -(position.x - (RoomWidth - viewBox.width / 2)) * 0.5;
+  })();
+  const bounceHeight = (() => {
+    if (position.y < viewBox.height / 2) {
+      return (viewBox.height / 2 - position.y) * 0.5;
+    }
+
+    if (position.y < RoomHeight - viewBox.height / 2) {
+      return 0;
+    }
+    return -(position.y - (RoomHeight - viewBox.height / 2)) * 0.5;
+  })();
+
+  // const bounceHeight =
+  console.log(bounceWidth);
 
   return (
     <div className={cn("h-screen", "w-screen")} ref={screenRef}>
@@ -45,12 +73,23 @@ export default function Room() {
         onClick={() => {
           colorPicker.isOpen = false;
         }}
+        className="bg-black"
         width={viewBox.width}
         height={viewBox.height}
-        viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
+        viewBox={`${viewBox.x + position.x - viewBox.width / 2 + bounceWidth} ${
+          viewBox.y + position.y - viewBox.height / 2 + bounceHeight
+        } ${viewBox.width} ${viewBox.height}`}
       >
         {/* 部屋の背景 */}
-        <rect width="100%" height="100%" className="fill-slate-100" />
+        <rect
+          x="0"
+          y="0"
+          width={RoomWidth}
+          height={RoomHeight}
+          className="fill-slate-100"
+        />
+
+        {/* <rect x="200" y="200" width="200" height="200" className="black" /> */}
 
         {/* 他のアバター */}
         {users.users.map(({ id, position, color, reaction }) => {
@@ -68,7 +107,7 @@ export default function Room() {
         })}
 
         {/* 自分のアバター */}
-        <MyAvaterdRect width={viewBox.width} height={viewBox.height} />
+        <MyAvaterdRect width={RoomWidth} height={RoomHeight} />
       </svg>
       <div className="absolute bottom-8 right-8 flex flex-col-reverse justify-start items-center">
         <div className="bg-yellow-50/50 w-64 shadow-2xl rounded-2xl p-4">

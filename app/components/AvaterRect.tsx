@@ -20,7 +20,7 @@ export const AvaterRect: React.FC<AvatarProps> = ({
     y: position.y,
     color: color || "black",
     transform: `translate(${position.x}, ${position.y})`,
-    config: { tension: 300, friction: 20 },
+    config: { tension: 400, friction: 35 },
   });
 
   return (

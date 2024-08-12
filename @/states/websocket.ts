@@ -21,6 +21,7 @@ export const websocketState = proxy({
 });
 
 export const websocketConnect = (roomId: string) => {
+  disconnect();
   const ws = new WebSocket(`/api/ws/${roomId}`);
   console.log("WebSocket接続中...");
   ws.onopen = () => {

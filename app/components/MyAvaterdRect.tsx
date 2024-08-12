@@ -46,17 +46,17 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
   const [animatedPosition, api] = useSpring(() => ({
     x: my.position.x,
     y: my.position.y,
-    config: { tension: 300, friction: 20 },
+    config: { tension: 400, friction: 35 },
   }));
 
   const animateTransform = useSpring({
     transform: `translate(${my.position.x}, ${my.position.y})`,
-    config: { tension: 300, friction: 20 },
+    config: { tension: 400, friction: 35 },
   });
 
   const { color } = useSpring({
     color: myColor.color,
-    config: { tension: 300, friction: 20 },
+    config: { tension: 400, friction: 35 },
   });
 
   useEffect(() => {
