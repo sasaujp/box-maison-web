@@ -12,10 +12,36 @@ import { colorPicker } from "@/states/ui";
 import { sendReaction } from "@/websocket/command";
 import { useEffect } from "react";
 
-const REACTIONS = ["❗", "👍", "😊", "🎉", "👋"];
+const REACTIONS = ["❗", "🖐️", "😊", "👍", "👋"];
 
 const RoomWidth = 3500;
 const RoomHeight = 1000;
+
+const calcBounce = (
+  position: { x: number; y: number },
+  viewBox: { width: number; height: number }
+) => {
+  let bounceWidth = 0;
+  if (position.x < viewBox.width / 2) {
+    bounceWidth = (viewBox.width / 2 - position.x) * 0.7;
+  } else if (position.x < RoomWidth - viewBox.width / 2) {
+    bounceWidth = 0;
+  } else {
+    bounceWidth = bounceWidth =
+      -(position.x - (RoomWidth - viewBox.width / 2)) * 0.7;
+  }
+
+  let bounceHeight = 0;
+  if (position.y < viewBox.height / 2) {
+    bounceHeight = (viewBox.height / 2 - position.y) * 0.7;
+  } else if (position.y < RoomHeight - viewBox.height / 2) {
+    bounceHeight = 0;
+  } else {
+    bounceHeight = -(position.y - (RoomHeight - viewBox.height / 2)) * 0.7;
+  }
+  return [bounceWidth, bounceHeight];
+};
+
 export default function Room() {
   const { roomName } = useParams();
   const handle = roomName?.startsWith("@") ? roomName.slice(1) : null;
@@ -43,26 +69,7 @@ export default function Room() {
   const { isOpen } = useSnapshot(colorPicker);
   const { position } = useSnapshot(myState);
 
-  const bounceWidth = (() => {
-    if (position.x < viewBox.width / 2) {
-      return (viewBox.width / 2 - position.x) * 0.5;
-    }
-
-    if (position.x < RoomWidth - viewBox.width / 2) {
-      return 0;
-    }
-    return -(position.x - (RoomWidth - viewBox.width / 2)) * 0.5;
-  })();
-  const bounceHeight = (() => {
-    if (position.y < viewBox.height / 2) {
-      return (viewBox.height / 2 - position.y) * 0.5;
-    }
-
-    if (position.y < RoomHeight - viewBox.height / 2) {
-      return 0;
-    }
-    return -(position.y - (RoomHeight - viewBox.height / 2)) * 0.5;
-  })();
+  const [bounceWidth, bounceHeight] = calcBounce(position, viewBox);
 
   // const bounceHeight =
   console.log(bounceWidth);
