@@ -3,15 +3,11 @@ import { useSpring, animated } from "@react-spring/web";
 import { myColor, myState } from "@/states/avater";
 import { useSnapshot } from "valtio";
 import { ReactionBubble } from "./ReactionBubble";
+import { isInside, rectRoomsState } from "@/states/meison";
 
 const AVATAR_SIZE = 40;
 const SPEED = 900; // pixels per second
 const POSITION_UPDATE_THRESHOLD = 0.1;
-
-interface SmoothAvatarProps {
-  width: number;
-  height: number;
-}
 
 type Keys = {
   ArrowUp: boolean;
@@ -24,10 +20,7 @@ type Keys = {
   d: boolean;
 };
 
-export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
-  width,
-  height,
-}) => {
+export const MyAvaterdRect: React.FC = () => {
   const [keys, setKeys] = useState<Keys>({
     ArrowUp: false,
     ArrowDown: false,
@@ -42,6 +35,7 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
   const my = useSnapshot(myState);
   const lastUpdateTime = useRef(Date.now());
   const animationFrameId = useRef<number | null>(null);
+  const { rectRooms } = useSnapshot(rectRoomsState);
 
   const [animatedPosition, api] = useSpring(() => ({
     x: my.position.x,
@@ -102,14 +96,62 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
       dx *= SPEED * deltaTime;
       dy *= SPEED * deltaTime;
 
-      const newX = Math.max(
-        0,
-        Math.min(width - AVATAR_SIZE, myState.position.x + dx)
-      );
-      const newY = Math.max(
-        0,
-        Math.min(height - AVATAR_SIZE, myState.position.y + dy)
-      );
+      const rect = rectRooms.find((rectRoom) => {
+        if (
+          isInside(rectRoom, myState.position.x + 20, myState.position.y + 20)
+        ) {
+          return rectRoom;
+        }
+      });
+      if (!rect) {
+        return;
+      }
+
+      const left = myState.position.x + dx;
+      const top = myState.position.y + dy;
+      const right = left + AVATAR_SIZE;
+      const bottom = top + AVATAR_SIZE;
+
+      const isInsideLeftTop = rectRooms.find((rectRoom) => {
+        if (isInside(rectRoom, left, top)) {
+          return true;
+        }
+      });
+      const isInsideRightTop = rectRooms.find((rectRoom) => {
+        if (isInside(rectRoom, right, top)) {
+          return true;
+        }
+      });
+      const isInsideLeftBottom = rectRooms.find((rectRoom) => {
+        if (isInside(rectRoom, left, bottom)) {
+          return true;
+        }
+      });
+      const isInsideRightBottom = rectRooms.find((rectRoom) => {
+        if (isInside(rectRoom, right, bottom)) {
+          return true;
+        }
+      });
+      let newX = 0;
+      let newY = 0;
+      if (
+        isInsideLeftTop &&
+        isInsideRightTop &&
+        isInsideLeftBottom &&
+        isInsideRightBottom
+      ) {
+        newX = myState.position.x + dx;
+        newY = myState.position.y + dy;
+      } else {
+        newX = Math.max(
+          rect.x1,
+          Math.min(rect.x2 - AVATAR_SIZE, myState.position.x + dx)
+        );
+        newY = Math.max(
+          rect.y1,
+          Math.min(rect.y2 - AVATAR_SIZE, myState.position.y + dy)
+        );
+      }
 
       const changeX = Math.abs(newX - myState.position.x);
       const changeY = Math.abs(newY - myState.position.y);
@@ -132,7 +174,7 @@ export const MyAvaterdRect: React.FC<SmoothAvatarProps> = ({
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [keys, width, height]);
+  }, [keys, rectRooms]);
 
   useEffect(() => {
     api.start({ x: my.position.x, y: my.position.y });

@@ -68,6 +68,7 @@ if (typeof window !== "undefined") {
   });
 
   subscribe(myColor, () => {
+    console.log("color changed");
     if (websocketState.isConnected && websocketState.socketRef.socket) {
       throttledSendColor(myColor.color);
     }

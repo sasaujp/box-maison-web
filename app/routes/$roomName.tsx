@@ -11,36 +11,64 @@ import Skech from "@uiw/react-color-sketch";
 import { colorPicker } from "@/states/ui";
 import { sendReaction } from "@/websocket/command";
 import { useEffect } from "react";
+import { useRects } from "@/hooks/useRects";
+import { rectRoomsState } from "@/states/meison";
 
 const REACTIONS = ["❗", "🖐️", "😊", "👍", "👋"];
 
-const RoomWidth = 3500;
-const RoomHeight = 1000;
+function easeOutCirc(x: number): number {
+  return Math.sqrt(1 - Math.pow(x - 1, 2));
+}
 
-const calcBounce = (
-  position: { x: number; y: number },
-  viewBox: { width: number; height: number }
+const calcSmoothBounce = (
+  pos: number,
+  viewSize: number,
+  roomStart: number,
+  roomSize: number,
+  easeFunc: (x: number) => number
 ) => {
-  let bounceWidth = 0;
-  if (position.x < viewBox.width / 2) {
-    bounceWidth = (viewBox.width / 2 - position.x) * 0.7;
-  } else if (position.x < RoomWidth - viewBox.width / 2) {
-    bounceWidth = 0;
-  } else {
-    bounceWidth = bounceWidth =
-      -(position.x - (RoomWidth - viewBox.width / 2)) * 0.7;
+  const edgeThreshold = viewSize * 0.7; // 端から画面サイズの半分の位置で調整を開始
+  let bounce = 0;
+
+  if (pos < roomStart + edgeThreshold) {
+    const factor = (roomStart + edgeThreshold - pos) * 0.5;
+    bounce = factor;
+    bounce = easeFunc(factor / (edgeThreshold / 2)) * factor;
+  } else if (pos > roomStart + roomSize - edgeThreshold) {
+    const factor = -(pos - (roomStart + roomSize - edgeThreshold)) * 0.5;
+    bounce = easeFunc(-factor / (edgeThreshold / 2)) * factor;
   }
 
-  let bounceHeight = 0;
-  if (position.y < viewBox.height / 2) {
-    bounceHeight = (viewBox.height / 2 - position.y) * 0.7;
-  } else if (position.y < RoomHeight - viewBox.height / 2) {
-    bounceHeight = 0;
-  } else {
-    bounceHeight = -(position.y - (RoomHeight - viewBox.height / 2)) * 0.7;
-  }
-  return [bounceWidth, bounceHeight];
+  return bounce;
 };
+
+// const calcBounce = (
+//   position: { x: number; y: number },
+//   viewBox: { width: number; height: number },
+//   RoomBox: { x: number; y: number; width: number; height: number }
+// ) => {
+//   console.log(RoomBox, position);
+//   let bounceWidth = 0;
+//   if (position.x < RoomBox.x + viewBox.width / 2) {
+//     bounceWidth = (RoomBox.x + viewBox.width / 2 - position.x) * 0.7;
+//   } else if (position.x < RoomBox.x + RoomBox.width - viewBox.width / 2) {
+//     bounceWidth = 0;
+//   } else {
+//     bounceWidth =
+//       -(position.x - (RoomBox.x + RoomBox.width - viewBox.width / 2)) * 0.5;
+//   }
+
+//   let bounceHeight = 0;
+//   if (position.y < RoomBox.y + viewBox.height / 2) {
+//     bounceHeight = (RoomBox.y + viewBox.height / 2 - position.y) * 0.7;
+//   } else if (position.y < RoomBox.y + RoomBox.height - viewBox.height / 2) {
+//     bounceHeight = 0;
+//   } else {
+//     bounceHeight =
+//       -(position.y - (RoomBox.y + RoomBox.height - viewBox.height / 2)) * 0.5;
+//   }
+//   return [bounceWidth, bounceHeight];
+// };
 
 export default function Room() {
   const { roomName } = useParams();
@@ -56,24 +84,40 @@ export default function Room() {
 
   websocketState.roomId = handle;
 
-  useEffect(() => {
-    myState.position = { x: RoomWidth / 2 - 20, y: RoomHeight / 2 - 20 };
-    return () => {
-      disconnect();
-    };
-  }, []);
-
   const { viewBox, screenRef } = useViewBox();
   const users = useSnapshot(usersState);
   const { color } = useSnapshot(myColor);
   const { isOpen } = useSnapshot(colorPicker);
   const { position } = useSnapshot(myState);
+  const { houseBox } = useRects();
+  const { rectRooms } = useSnapshot(rectRoomsState);
 
-  const [bounceWidth, bounceHeight] = calcBounce(position, viewBox);
+  useEffect(() => {
+    const rect = rectRoomsState.rectRooms[0];
+    myState.position = {
+      x: (rect.x2 - rect.x1) / 2 - 20,
+      y: (rect.y2 - rect.y1) / 2 - 20,
+    };
+    return () => {
+      disconnect();
+    };
+  }, []);
 
-  // const bounceHeight =
-  console.log(bounceWidth);
-
+  const bounceX = calcSmoothBounce(
+    position.x,
+    viewBox.width,
+    houseBox.x,
+    houseBox.width,
+    easeOutCirc
+  );
+  console.log(bounceX);
+  const bounceY = calcSmoothBounce(
+    position.y,
+    viewBox.height,
+    houseBox.y,
+    houseBox.height,
+    easeOutCirc
+  );
   return (
     <div className={cn("h-screen", "w-screen")} ref={screenRef}>
       <svg
@@ -83,20 +127,34 @@ export default function Room() {
         className="bg-black"
         width={viewBox.width}
         height={viewBox.height}
-        viewBox={`${viewBox.x + position.x - viewBox.width / 2 + bounceWidth} ${
-          viewBox.y + position.y - viewBox.height / 2 + bounceHeight
+        viewBox={`${viewBox.x + position.x - viewBox.width / 2 + bounceX} ${
+          viewBox.y + position.y - viewBox.height / 2 + bounceY
         } ${viewBox.width} ${viewBox.height}`}
       >
         {/* 部屋の背景 */}
-        <rect
+        {/* <rect
           x="0"
           y="0"
           width={RoomWidth}
           height={RoomHeight}
           className="fill-slate-100"
-        />
+        /> */}
 
         {/* <rect x="200" y="200" width="200" height="200" className="black" /> */}
+
+        {/* 部屋の枠 */}
+        {rectRooms.map(({ x1, y1, x2, y2 }, i) => {
+          return (
+            <rect
+              key={i}
+              x={x1}
+              y={y1}
+              width={x2 - x1}
+              height={y2 - y1}
+              className="fill-slate-100"
+            />
+          );
+        })}
 
         {/* 他のアバター */}
         {users.users.map(({ id, position, color, reaction }) => {
@@ -114,7 +172,7 @@ export default function Room() {
         })}
 
         {/* 自分のアバター */}
-        <MyAvaterdRect width={RoomWidth} height={RoomHeight} />
+        <MyAvaterdRect />
       </svg>
       <div className="absolute bottom-8 right-8 flex flex-col-reverse justify-start items-center">
         <div className="bg-yellow-50/50 w-64 shadow-2xl rounded-2xl p-4">
