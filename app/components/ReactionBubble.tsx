@@ -1,5 +1,5 @@
 import React from "react";
-const AVATAR_SIZE = 40;
+const AVATAR_SIZE = 50;
 const BUBBLE_WIDTH = 50;
 const BUBBLE_HEIGHT = 50;
 

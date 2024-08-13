@@ -5,7 +5,7 @@ import { useSnapshot } from "valtio";
 import { ReactionBubble } from "./ReactionBubble";
 import { isInside, rectRoomsState } from "@/states/meison";
 
-const AVATAR_SIZE = 40;
+const AVATAR_SIZE = 50;
 const SPEED = 900; // pixels per second
 const POSITION_UPDATE_THRESHOLD = 0.1;
 

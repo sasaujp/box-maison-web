@@ -2,7 +2,7 @@ import React from "react";
 import { useSpring, animated } from "@react-spring/web";
 import { ReactionBubble } from "./ReactionBubble";
 
-const AVATAR_SIZE = 40;
+const AVATAR_SIZE = 50;
 
 interface AvatarProps {
   position: { x: number; y: number };
