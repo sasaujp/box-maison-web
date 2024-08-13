@@ -37,12 +37,6 @@ export const MyAvaterdRect: React.FC = () => {
   const animationFrameId = useRef<number | null>(null);
   const { rectRooms } = useSnapshot(rectRoomsState);
 
-  const [animatedPosition, api] = useSpring(() => ({
-    x: my.position.x,
-    y: my.position.y,
-    config: { tension: 400, friction: 35 },
-  }));
-
   const animateTransform = useSpring({
     transform: `translate(${my.position.x}, ${my.position.y})`,
     config: { tension: 400, friction: 35 },
@@ -176,23 +170,53 @@ export const MyAvaterdRect: React.FC = () => {
     };
   }, [keys, rectRooms]);
 
-  useEffect(() => {
-    api.start({ x: my.position.x, y: my.position.y });
-  }, [my, api]);
   return (
-    <>
+    <animated.g transform={animateTransform.transform}>
       <animated.rect
         width={AVATAR_SIZE}
         height={AVATAR_SIZE}
-        x={animatedPosition.x}
-        y={animatedPosition.y}
+        x={0}
+        y={0}
         fill={color}
+        rx="10"
+        ry="10"
       />
+      <animated.rect
+        x={2.5}
+        y={2.5}
+        width={AVATAR_SIZE - 5}
+        height={AVATAR_SIZE - 5}
+        fill="white"
+        opacity="0.1"
+        rx="10"
+        ry="10"
+      />
+      <pattern
+        id="diagonalHatch"
+        patternUnits="userSpaceOnUse"
+        width="8"
+        height="8"
+      >
+        <path
+          d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4"
+          stroke="white"
+          strokeWidth="2"
+          opacity="0.2"
+        />
+      </pattern>
+      <rect
+        width={AVATAR_SIZE}
+        height={AVATAR_SIZE}
+        fill="url(#diagonalHatch)"
+        rx="10"
+        ry="10"
+      />
+      <circle cx={37.5} cy={12.5} r="7.5" fill="white" opacity="0.2" />
       {my.reaction && (
-        <animated.g transform={animateTransform.transform}>
+        <g>
           <ReactionBubble reaction={my.reaction} />
-        </animated.g>
+        </g>
       )}
-    </>
+    </animated.g>
   );
 };

@@ -42,34 +42,6 @@ const calcSmoothBounce = (
   return bounce;
 };
 
-// const calcBounce = (
-//   position: { x: number; y: number },
-//   viewBox: { width: number; height: number },
-//   RoomBox: { x: number; y: number; width: number; height: number }
-// ) => {
-//   console.log(RoomBox, position);
-//   let bounceWidth = 0;
-//   if (position.x < RoomBox.x + viewBox.width / 2) {
-//     bounceWidth = (RoomBox.x + viewBox.width / 2 - position.x) * 0.7;
-//   } else if (position.x < RoomBox.x + RoomBox.width - viewBox.width / 2) {
-//     bounceWidth = 0;
-//   } else {
-//     bounceWidth =
-//       -(position.x - (RoomBox.x + RoomBox.width - viewBox.width / 2)) * 0.5;
-//   }
-
-//   let bounceHeight = 0;
-//   if (position.y < RoomBox.y + viewBox.height / 2) {
-//     bounceHeight = (RoomBox.y + viewBox.height / 2 - position.y) * 0.7;
-//   } else if (position.y < RoomBox.y + RoomBox.height - viewBox.height / 2) {
-//     bounceHeight = 0;
-//   } else {
-//     bounceHeight =
-//       -(position.y - (RoomBox.y + RoomBox.height - viewBox.height / 2)) * 0.5;
-//   }
-//   return [bounceWidth, bounceHeight];
-// };
-
 export default function Room() {
   const { roomName } = useParams();
   const handle = roomName?.startsWith("@") ? roomName.slice(1) : null;
@@ -110,7 +82,6 @@ export default function Room() {
     houseBox.width,
     easeOutCirc
   );
-  console.log(bounceX);
   const bounceY = calcSmoothBounce(
     position.y,
     viewBox.height,
@@ -131,17 +102,6 @@ export default function Room() {
           viewBox.y + position.y - viewBox.height / 2 + bounceY
         } ${viewBox.width} ${viewBox.height}`}
       >
-        {/* 部屋の背景 */}
-        {/* <rect
-          x="0"
-          y="0"
-          width={RoomWidth}
-          height={RoomHeight}
-          className="fill-slate-100"
-        /> */}
-
-        {/* <rect x="200" y="200" width="200" height="200" className="black" /> */}
-
         {/* 部屋の枠 */}
         {rectRooms.map(({ x1, y1, x2, y2 }, i) => {
           return (
