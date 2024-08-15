@@ -13,6 +13,7 @@ import { sendReaction } from "@/websocket/command";
 import { useEffect } from "react";
 import { useRects } from "@/hooks/useRects";
 import { rectRoomsState } from "@/states/meison";
+import PatternedColorButton from "~/components/PatternedColorButton";
 
 const REACTIONS = ["❗", "🖐️", "😊", "👍", "👋"];
 
@@ -137,14 +138,12 @@ export default function Room() {
       <div className="absolute bottom-8 right-8 flex flex-col-reverse justify-start items-center">
         <div className="bg-yellow-50/50 w-64 shadow-2xl rounded-2xl p-4">
           <div className="flex w-full justify-center">
-            <Button
+            <PatternedColorButton
               onClick={() => {
                 colorPicker.isOpen = !colorPicker.isOpen;
               }}
               className="rounded-full w-10 h-10"
-              style={{
-                backgroundColor: color,
-              }}
+              color={color}
             />
           </div>
           <div className="flex justify-between mt-4">
