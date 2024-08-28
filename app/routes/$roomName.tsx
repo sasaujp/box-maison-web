@@ -28,9 +28,9 @@ const calcSmoothBounce = (
   roomSize: number,
   easeFunc: (x: number) => number
 ) => {
-  const edgeThreshold = viewSize * 0.7; // 端から画面サイズの半分の位置で調整を開始
+  // 端から画面サイズの半分の位置で調整を開始
+  const edgeThreshold = Math.min(viewSize * 0.7, (roomSize - roomStart) * 0.5);
   let bounce = 0;
-
   if (pos < roomStart + edgeThreshold) {
     const factor = (roomStart + edgeThreshold - pos) * 0.5;
     bounce = factor;
@@ -57,7 +57,7 @@ export default function Room() {
 
   websocketState.roomId = handle;
 
-  const { viewBox, screenRef } = useViewBox();
+  const { viewBox, screenRef, zoom } = useViewBox();
   const users = useSnapshot(usersState);
   const { color } = useSnapshot(myColor);
   const { isOpen } = useSnapshot(colorPicker);
@@ -101,7 +101,7 @@ export default function Room() {
         height={viewBox.height}
         viewBox={`${viewBox.x + position.x - viewBox.width / 2 + bounceX} ${
           viewBox.y + position.y - viewBox.height / 2 + bounceY
-        } ${viewBox.width} ${viewBox.height}`}
+        } ${viewBox.width * zoom} ${viewBox.height * zoom}`}
       >
         {/* 部屋の枠 */}
         {rectRooms.map(({ x1, y1, x2, y2 }, i) => {
@@ -156,7 +156,7 @@ export default function Room() {
                     addReaction(null, reaction);
                   }}
                   variant="outline"
-                  className="rounded-full w-10 h-10 shadow-2xl text-xl"
+                  className="rounded-full w-10 h-10 shadow-2xl text-xl relative"
                 >
                   {reaction}
                 </Button>

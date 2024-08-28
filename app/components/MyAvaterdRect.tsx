@@ -3,9 +3,10 @@ import { useSpring, animated } from "@react-spring/web";
 import { myColor, myState } from "@/states/avater";
 import { useSnapshot } from "valtio";
 import { ReactionBubble } from "./ReactionBubble";
-import { isInside, rectRoomsState } from "@/states/meison";
+import { rectRoomsState } from "@/states/meison";
+import { calcNewPosition } from "~/lib/moveAvater";
 
-const AVATAR_SIZE = 50;
+export const AVATAR_SIZE = 50;
 const SPEED = 900; // pixels per second
 const POSITION_UPDATE_THRESHOLD = 0.1;
 
@@ -79,6 +80,11 @@ export const MyAvaterdRect: React.FC = () => {
       if (keys.ArrowLeft || keys.a) dx -= 1;
       if (keys.ArrowRight || keys.d) dx += 1;
 
+      if (dx === 0 && dy === 0) {
+        animationFrameId.current = requestAnimationFrame(updatePosition);
+        return;
+      }
+
       // Normalize diagonal movement
       if (dx !== 0 && dy !== 0) {
         const magnitude = Math.sqrt(dx * dx + dy * dy);
@@ -90,63 +96,12 @@ export const MyAvaterdRect: React.FC = () => {
       dx *= SPEED * deltaTime;
       dy *= SPEED * deltaTime;
 
-      const rect = rectRooms.find((rectRoom) => {
-        if (
-          isInside(rectRoom, myState.position.x + 20, myState.position.y + 20)
-        ) {
-          return rectRoom;
-        }
-      });
-      if (!rect) {
-        return;
-      }
-
-      const left = myState.position.x + dx;
-      const top = myState.position.y + dy;
-      const right = left + AVATAR_SIZE;
-      const bottom = top + AVATAR_SIZE;
-
-      const isInsideLeftTop = rectRooms.find((rectRoom) => {
-        if (isInside(rectRoom, left, top)) {
-          return true;
-        }
-      });
-      const isInsideRightTop = rectRooms.find((rectRoom) => {
-        if (isInside(rectRoom, right, top)) {
-          return true;
-        }
-      });
-      const isInsideLeftBottom = rectRooms.find((rectRoom) => {
-        if (isInside(rectRoom, left, bottom)) {
-          return true;
-        }
-      });
-      const isInsideRightBottom = rectRooms.find((rectRoom) => {
-        if (isInside(rectRoom, right, bottom)) {
-          return true;
-        }
-      });
-      let newX = 0;
-      let newY = 0;
-      if (
-        isInsideLeftTop &&
-        isInsideRightTop &&
-        isInsideLeftBottom &&
-        isInsideRightBottom
-      ) {
-        newX = myState.position.x + dx;
-        newY = myState.position.y + dy;
-      } else {
-        newX = Math.max(
-          rect.x1,
-          Math.min(rect.x2 - AVATAR_SIZE, myState.position.x + dx)
-        );
-        newY = Math.max(
-          rect.y1,
-          Math.min(rect.y2 - AVATAR_SIZE, myState.position.y + dy)
-        );
-      }
-
+      const { newX, newY } = calcNewPosition(
+        my.position,
+        dx,
+        dy,
+        rectRoomsState.rectRooms
+      );
       const changeX = Math.abs(newX - myState.position.x);
       const changeY = Math.abs(newY - myState.position.y);
 
@@ -168,7 +123,7 @@ export const MyAvaterdRect: React.FC = () => {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [keys, rectRooms]);
+  }, [keys, my.position, rectRooms]);
 
   return (
     <animated.g transform={animateTransform.transform}>

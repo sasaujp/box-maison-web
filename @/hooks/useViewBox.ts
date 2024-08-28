@@ -9,6 +9,8 @@ export const useViewBox = () => {
     width: 0,
     height: 0,
   });
+  const [zoom, setZoom] = useState(1);
+
   const viewBoxRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
   useEffect(() => {
@@ -16,6 +18,14 @@ export const useViewBox = () => {
       if (entries.length === 0 || !entries[0].target) return;
 
       const rect = entries[0].target.getBoundingClientRect();
+      let zoom = 1.0;
+      if (rect.width < 900) {
+        zoom = 1.5;
+      } else if (rect.width < 1200) {
+        zoom = 1.3;
+      }
+      setZoom(zoom);
+
       setViewBox({
         x: rect.left,
         y: rect.top,
@@ -38,5 +48,5 @@ export const useViewBox = () => {
     };
   }, []);
 
-  return { screenRef, viewBox, viewBoxRef };
+  return { screenRef, viewBox, viewBoxRef, zoom };
 };
