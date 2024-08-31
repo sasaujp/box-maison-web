@@ -2,18 +2,17 @@ import { cn } from "~/lib/utils";
 import { useParams } from "@remix-run/react";
 import { useViewBox } from "@/hooks/useViewBox";
 import { MyAvaterdRect } from "~/components/MyAvaterdRect";
-import { addReaction, myColor, myState, usersState } from "@/states/avater";
+import { myColor, myState, usersState } from "@/states/avater";
 import { useSnapshot } from "valtio";
 import { disconnect, websocketState } from "@/states/websocket";
 import { AvaterRect } from "~/components/AvaterRect";
-import { Button } from "~/components/ui/button";
 import Skech from "@uiw/react-color-sketch";
 import { colorPicker } from "@/states/ui";
-import { sendReaction } from "@/websocket/command";
 import { useEffect } from "react";
 import { useRects } from "@/hooks/useRects";
 import { rectRoomsState } from "@/states/meison";
 import PatternedColorButton from "~/components/PatternedColorButton";
+import { ReactionButton } from "~/components/ReactionButton";
 
 const REACTIONS = ["❗", "🖐️", "😊", "👍", "👋"];
 
@@ -148,19 +147,7 @@ export default function Room() {
           </div>
           <div className="flex justify-between mt-4">
             {REACTIONS.map((reaction) => {
-              return (
-                <Button
-                  key={reaction}
-                  onClick={() => {
-                    sendReaction(reaction);
-                    addReaction(null, reaction);
-                  }}
-                  variant="outline"
-                  className="rounded-full w-10 h-10 shadow-2xl text-xl relative"
-                >
-                  {reaction}
-                </Button>
-              );
+              return <ReactionButton key={reaction} reaction={reaction} />;
             })}
           </div>
         </div>
