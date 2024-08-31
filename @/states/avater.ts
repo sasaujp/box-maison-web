@@ -2,15 +2,17 @@ import { proxy, ref, subscribe } from "valtio";
 import { websocketState } from "./websocket";
 import { throttledSendColor, throttledSendPosition } from "@/websocket/command";
 
+export const BUBBLE_REACTIONS = ["❗", "🖐️", "😊", "👍", "👋"];
+
 export type User = {
   position?: { x: number; y: number };
   color?: string;
-  reaction: string | null;
+  reaction: { value: string } | null;
 };
 
 export const myState = proxy({
   position: { x: 0, y: 0 },
-  reaction: null as string | null,
+  reaction: null as { value: string } | null,
 });
 
 export const clearReactionTimer = proxy(
@@ -27,28 +29,37 @@ export const usersState = proxy<{ users: ({ id: string } & User)[] }>({
 
 export const addReaction = (userId: string | null, reaction: string) => {
   if (!userId) {
-    myState.reaction = reaction;
+    myState.reaction = { value: reaction };
     if (clearReactionTimer["my"]) {
       clearTimeout(clearReactionTimer["my"]);
     }
-    clearReactionTimer["my"] = setTimeout(() => {
-      myState.reaction = null;
-      delete clearReactionTimer["my"];
-    }, 5000);
+    clearReactionTimer["my"] = setTimeout(
+      () => {
+        myState.reaction = null;
+        console.log("clear reaction", userId);
+        delete clearReactionTimer["my"];
+      },
+      BUBBLE_REACTIONS.includes(reaction) ? 5000 : 100
+    );
     return;
   }
+
   const user = usersState.users.find((user) => user.id === userId);
   if (!user) {
     return;
   }
-  user.reaction = reaction;
+  user.reaction = { value: reaction };
   if (clearReactionTimer[userId]) {
     clearTimeout(clearReactionTimer[userId]);
   }
-  clearReactionTimer[userId] = setTimeout(() => {
-    user.reaction = null;
-    delete clearReactionTimer[userId];
-  }, 5000);
+  clearReactionTimer[userId] = setTimeout(
+    () => {
+      user.reaction = null;
+      console.log("clear reaction", userId);
+      delete clearReactionTimer[userId];
+    },
+    BUBBLE_REACTIONS.includes(reaction) ? 5000 : 100
+  );
 };
 
 export const updateActiveUsers = (userIds: string[]) => {

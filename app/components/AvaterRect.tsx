@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useSpring, animated } from "@react-spring/web";
 import { ReactionBubble } from "./ReactionBubble";
+import { useAvatarAnimation } from "./useAvaterAnimation";
+import { BUBBLE_REACTIONS } from "@/states/avater";
 
 const AVATAR_SIZE = 50;
 
 interface AvatarProps {
   position: { x: number; y: number };
   color?: string;
-  reaction: string | null;
+  reaction: { value: string } | null;
 }
 
 export const AvaterRect: React.FC<AvatarProps> = ({
@@ -22,10 +24,50 @@ export const AvaterRect: React.FC<AvatarProps> = ({
     transform: `translate(${position.x}, ${position.y})`,
     config: { tension: 400, friction: 35 },
   });
+  const {
+    animationStyle,
+    performBounce,
+    performRotate,
+    performStretch,
+    performBow,
+    performStumble,
+  } = useAvatarAnimation();
+
+  useEffect(() => {
+    if (!reaction) return;
+
+    if (reaction.value === "1") {
+      performBounce();
+    } else if (reaction.value === "2") {
+      performStretch();
+    } else if (reaction.value === "3") {
+      performBow();
+    } else if (reaction.value === "4") {
+      performRotate();
+    } else if (reaction.value === "5") {
+      performStumble();
+    }
+  }, [
+    reaction,
+    performBounce,
+    performRotate,
+    performStretch,
+    performBow,
+    performStumble,
+  ]);
 
   return (
-    <>
-      <animated.g transform={animate.transform}>
+    <animated.g transform={animate.transform}>
+      <animated.g
+        style={{
+          transformOrigin: `${AVATAR_SIZE / 2}px ${AVATAR_SIZE / 2}px`,
+          rotate: animationStyle.rotate.to((r) => `${r}deg`),
+          scale: animationStyle.scale,
+          scaleX: animationStyle.scaleX,
+          scaleY: animationStyle.scaleY,
+          translateY: animationStyle.translateY,
+        }}
+      >
         <animated.rect
           width={AVATAR_SIZE}
           height={AVATAR_SIZE}
@@ -66,12 +108,12 @@ export const AvaterRect: React.FC<AvatarProps> = ({
           ry="10"
         />
         <circle cx={37.5} cy={12.5} r="7.5" fill="white" opacity="0.2" />
-        {reaction && (
-          <g>
-            <ReactionBubble reaction={reaction} />
-          </g>
-        )}
       </animated.g>
-    </>
+      {reaction && BUBBLE_REACTIONS.includes(reaction.value) && (
+        <g>
+          <ReactionBubble reaction={reaction.value} />
+        </g>
+      )}
+    </animated.g>
   );
 };

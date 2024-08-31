@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSpring, animated } from "@react-spring/web";
-import { myColor, myState } from "@/states/avater";
+import { BUBBLE_REACTIONS, myColor, myState } from "@/states/avater";
 import { useSnapshot } from "valtio";
 import { ReactionBubble } from "./ReactionBubble";
 import { rectRoomsState } from "@/states/meison";
 import { calcNewPosition } from "~/lib/moveAvater";
+import { useAvatarAnimation } from "./useAvaterAnimation";
 
 export const AVATAR_SIZE = 50;
 const SPEED = 900; // pixels per second
@@ -37,6 +38,14 @@ export const MyAvaterdRect: React.FC = () => {
   const lastUpdateTime = useRef(Date.now());
   const animationFrameId = useRef<number | null>(null);
   const { rectRooms } = useSnapshot(rectRoomsState);
+  const {
+    animationStyle,
+    performBounce,
+    performRotate,
+    performStretch,
+    performBow,
+    performStumble,
+  } = useAvatarAnimation();
 
   const animateTransform = useSpring({
     transform: `translate(${my.position.x}, ${my.position.y})`,
@@ -125,51 +134,86 @@ export const MyAvaterdRect: React.FC = () => {
     };
   }, [keys, my.position, rectRooms]);
 
+  useEffect(() => {
+    if (!my.reaction) return;
+
+    if (my.reaction.value === "1") {
+      performBounce();
+    } else if (my.reaction.value === "2") {
+      performStretch();
+    } else if (my.reaction.value === "3") {
+      performBow();
+    } else if (my.reaction.value === "4") {
+      performRotate();
+    } else if (my.reaction.value === "5") {
+      performStumble();
+    }
+  }, [
+    my.reaction,
+    performBounce,
+    performRotate,
+    performStretch,
+    performBow,
+    performStumble,
+  ]);
+
   return (
     <animated.g transform={animateTransform.transform}>
-      <animated.rect
-        width={AVATAR_SIZE}
-        height={AVATAR_SIZE}
-        x={0}
-        y={0}
-        fill={color}
-        rx="10"
-        ry="10"
-      />
-      <animated.rect
-        x={2.5}
-        y={2.5}
-        width={AVATAR_SIZE - 5}
-        height={AVATAR_SIZE - 5}
-        fill="white"
-        opacity="0.1"
-        rx="10"
-        ry="10"
-      />
-      <pattern
-        id="diagonalHatch"
-        patternUnits="userSpaceOnUse"
-        width="8"
-        height="8"
+      <animated.g
+        style={{
+          transformOrigin: `${AVATAR_SIZE / 2}px ${AVATAR_SIZE / 2}px`,
+          rotate: animationStyle.rotate.to((r) => `${r}deg`),
+          scale: animationStyle.scale,
+          scaleX: animationStyle.scaleX,
+          scaleY: animationStyle.scaleY,
+          translateY: animationStyle.translateY,
+        }}
       >
-        <path
-          d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4"
-          stroke="white"
-          strokeWidth="2"
-          opacity="0.2"
+        <animated.rect
+          width={AVATAR_SIZE}
+          height={AVATAR_SIZE}
+          x={0}
+          y={0}
+          fill={color}
+          rx="10"
+          ry="10"
         />
-      </pattern>
-      <rect
-        width={AVATAR_SIZE}
-        height={AVATAR_SIZE}
-        fill="url(#diagonalHatch)"
-        rx="10"
-        ry="10"
-      />
-      <circle cx={37.5} cy={12.5} r="7.5" fill="white" opacity="0.2" />
-      {my.reaction && (
+        <animated.rect
+          x={2.5}
+          y={2.5}
+          width={AVATAR_SIZE - 5}
+          height={AVATAR_SIZE - 5}
+          fill="white"
+          opacity="0.1"
+          rx="10"
+          ry="10"
+        />
+        <pattern
+          id="diagonalHatch"
+          patternUnits="userSpaceOnUse"
+          width="8"
+          height="8"
+        >
+          <path
+            d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4"
+            stroke="white"
+            strokeWidth="2"
+            opacity="0.2"
+          />
+        </pattern>
+        <rect
+          width={AVATAR_SIZE}
+          height={AVATAR_SIZE}
+          fill="url(#diagonalHatch)"
+          rx="10"
+          ry="10"
+        />
+        <circle cx={37.5} cy={12.5} r="7.5" fill="white" opacity="0.2" />
+      </animated.g>
+
+      {my.reaction && BUBBLE_REACTIONS.includes(my.reaction.value) && (
         <g>
-          <ReactionBubble reaction={my.reaction} />
+          <ReactionBubble reaction={my.reaction.value} />
         </g>
       )}
     </animated.g>

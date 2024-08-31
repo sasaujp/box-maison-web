@@ -2,7 +2,12 @@ import { cn } from "~/lib/utils";
 import { useParams } from "@remix-run/react";
 import { useViewBox } from "@/hooks/useViewBox";
 import { MyAvaterdRect } from "~/components/MyAvaterdRect";
-import { myColor, myState, usersState } from "@/states/avater";
+import {
+  BUBBLE_REACTIONS,
+  myColor,
+  myState,
+  usersState,
+} from "@/states/avater";
 import { useSnapshot } from "valtio";
 import { disconnect, websocketState } from "@/states/websocket";
 import { AvaterRect } from "~/components/AvaterRect";
@@ -13,8 +18,6 @@ import { useRects } from "@/hooks/useRects";
 import { rectRoomsState } from "@/states/meison";
 import PatternedColorButton from "~/components/PatternedColorButton";
 import { ReactionButton } from "~/components/ReactionButton";
-
-const REACTIONS = ["❗", "🖐️", "😊", "👍", "👋"];
 
 function easeOutCirc(x: number): number {
   return Math.sqrt(1 - Math.pow(x - 1, 2));
@@ -146,9 +149,17 @@ export default function Room() {
             />
           </div>
           <div className="flex justify-between mt-4">
-            {REACTIONS.map((reaction) => {
+            {BUBBLE_REACTIONS.map((reaction) => {
               return <ReactionButton key={reaction} reaction={reaction} />;
             })}
+          </div>
+
+          <div className="flex justify-between mt-4">
+            <ReactionButton reaction={"1"} />
+            <ReactionButton reaction={"2"} />
+            <ReactionButton reaction={"3"} />
+            <ReactionButton reaction={"4"} />
+            <ReactionButton reaction={"5"} />
           </div>
         </div>
         {isOpen && (
