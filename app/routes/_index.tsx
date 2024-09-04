@@ -16,8 +16,10 @@ export default function Index() {
   return (
     <div className="font-sans p-4">
       <h1 className="text-3xl">Welcome to Box-Maison!</h1>
-      <Link to="/@hoge">hoge room</Link>
-      <Button>hoge room</Button>
+
+      <Button asChild>
+        <Link to="/@hoge">ROOM</Link>
+      </Button>
     </div>
   );
 }

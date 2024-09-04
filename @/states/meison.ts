@@ -84,13 +84,13 @@ export const imagesState = proxy({
     },
     {
       src: "amongus.png",
-      cx: 600,
-      cy: 300,
+      cx: 1000,
+      cy: 1000,
     },
     {
       src: "yahoo.png",
       cx: 1000,
-      cy: 1000,
+      cy: 300,
     },
   ] as ImageStateType[],
 });
