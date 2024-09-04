@@ -15,9 +15,10 @@ import Skech from "@uiw/react-color-sketch";
 import { colorPicker } from "@/states/ui";
 import { useEffect } from "react";
 import { useRects } from "@/hooks/useRects";
-import { rectRoomsState } from "@/states/meison";
+import { rectRoomsState, imagesState } from "@/states/meison";
 import PatternedColorButton from "~/components/PatternedColorButton";
 import { ReactionButton } from "~/components/ReactionButton";
+import { FloorImage } from "~/components/FloorImage";
 
 function easeOutCirc(x: number): number {
   return Math.sqrt(1 - Math.pow(x - 1, 2));
@@ -105,7 +106,33 @@ export default function Room() {
           viewBox.y + position.y - viewBox.height / 2 + bounceY
         } ${viewBox.width * zoom} ${viewBox.height * zoom}`}
       >
+        <defs>
+          <path
+            id="rooms-path"
+            d={`
+          M -10000 -10000
+          H 10000
+          V 10000
+          H -10000
+          Z
+          ${rectRooms
+            .map(
+              ({ x1, y1, x2, y2 }) => `
+            M ${x1} ${y1}
+            L ${x2} ${y1}
+            L ${x2} ${y2}
+            L ${x1} ${y2}
+            Z
+          `
+            )
+            .join(" ")}
+        `}
+            fill="black"
+            fillRule="evenodd"
+          />
+        </defs>
         {/* 部屋の枠 */}
+
         {rectRooms.map(({ x1, y1, x2, y2 }, i) => {
           return (
             <rect
@@ -114,8 +141,14 @@ export default function Room() {
               y={y1}
               width={x2 - x1}
               height={y2 - y1}
-              className="fill-slate-100"
+              className="fill-slate-100 stroke-none"
             />
+          );
+        })}
+
+        {imagesState.images.map(({ src, cx, cy }) => {
+          return (
+            <FloorImage key={src} cx={cx} cy={cy} src={src} viewbox={viewBox} />
           );
         })}
 

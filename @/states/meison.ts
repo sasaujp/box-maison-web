@@ -1,4 +1,5 @@
-import { proxy } from "valtio";
+import { proxy, subscribe } from "valtio";
+import { myState } from "./avater";
 
 export type RectRoom = {
   x1: number;
@@ -43,27 +44,65 @@ export const rectRoomsState = proxy({
     },
     {
       x1: 200,
-      y1: 600 - 1,
+      y1: 600,
       x2: 400,
-      y2: 800 + 1,
+      y2: 800,
     },
     {
-      x1: 600 - 1,
+      x1: 600,
       y1: 200,
-      x2: 800 + 1,
+      x2: 800,
       y2: 400,
     },
     {
       x1: 1000,
-      y1: 600 - 1,
+      y1: 600,
       x2: 1200,
-      y2: 800 + 1,
+      y2: 800,
     },
     {
-      x1: 600 - 1,
+      x1: 600,
       y1: 1000,
-      x2: 800 + 1,
+      x2: 800,
       y2: 1200,
     },
   ] as RectRoom[],
 });
+
+export type ImageStateType = {
+  src: string;
+  cx: number;
+  cy: number;
+};
+
+export const imagesState = proxy({
+  images: [
+    {
+      src: "google.png",
+      cx: 300,
+      cy: 300,
+    },
+    {
+      src: "amongus.png",
+      cx: 600,
+      cy: 300,
+    },
+    {
+      src: "yahoo.png",
+      cx: 1000,
+      cy: 1000,
+    },
+  ] as ImageStateType[],
+});
+
+if (typeof window !== "undefined") {
+  subscribe(myState, () => {
+    const { x, y } = myState.position;
+
+    imagesState.images.sort((a, b) => {
+      const d1 = Math.sqrt(Math.pow(x - a.cx, 2) + Math.pow(y - a.cy, 2));
+      const d2 = Math.sqrt(Math.pow(x - b.cx, 2) + Math.pow(y - b.cy, 2));
+      return d2 - d1;
+    });
+  });
+}
