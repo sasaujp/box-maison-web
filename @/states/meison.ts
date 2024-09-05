@@ -71,6 +71,7 @@ export const rectRoomsState = proxy({
 
 export type ImageStateType = {
   src: string;
+  url: string;
   cx: number;
   cy: number;
 };
@@ -79,16 +80,19 @@ export const imagesState = proxy({
   images: [
     {
       src: "google.png",
+      url: "https://www.google.com",
       cx: 300,
       cy: 300,
     },
     {
       src: "amongus.png",
-      cx: 1000,
-      cy: 1000,
+      url: "https://www.innersloth.com/gameAmongUs.php",
+      cx: 1100,
+      cy: 1100,
     },
     {
       src: "yahoo.png",
+      url: "https://www.yahoo.co.jp",
       cx: 1000,
       cy: 300,
     },

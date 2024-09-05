@@ -15,10 +15,10 @@ import Skech from "@uiw/react-color-sketch";
 import { colorPicker } from "@/states/ui";
 import { useEffect } from "react";
 import { useRects } from "@/hooks/useRects";
-import { rectRoomsState, imagesState } from "@/states/meison";
+import { rectRoomsState } from "@/states/meison";
 import PatternedColorButton from "~/components/PatternedColorButton";
 import { ReactionButton } from "~/components/ReactionButton";
-import { FloorImage } from "~/components/FloorImage";
+import { FloorImages } from "~/components/FloorImages";
 
 function easeOutCirc(x: number): number {
   return Math.sqrt(1 - Math.pow(x - 1, 2));
@@ -145,13 +145,7 @@ export default function Room() {
             />
           );
         })}
-
-        {imagesState.images.map(({ src, cx, cy }) => {
-          return (
-            <FloorImage key={src} cx={cx} cy={cy} src={src} viewbox={viewBox} />
-          );
-        })}
-
+        <FloorImages viewbox={viewBox} />
         {/* 他のアバター */}
         {users.users.map(({ id, position, color, reaction }) => {
           if (!position) {

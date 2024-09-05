@@ -1,16 +1,17 @@
-import { ImageStateType } from "@/states/meison";
 import React, { useState, useEffect, useRef } from "react";
 import { animated, useSpring } from "@react-spring/web";
 import { myState } from "@/states/avater";
 import { useSnapshot } from "valtio";
+import { imagesState } from "@/states/meison";
+import { useEnterKeyNavigation } from "./useEnterKeyNavigation";
 
 const MAX_WIDTH = 900;
 const MAX_HEIGHT = 700;
 const MIN_SIZE = 50;
 const INTERACTION_DISTANCE = 400;
 
-export const FloorImage: React.FC<
-  ImageStateType & {
+const FloorImage: React.FC<
+  { cx: number; cy: number; src: string } & {
     viewbox: { x: number; y: number; width: number; height: number };
   }
 > = ({ src, cx, cy }) => {
@@ -74,6 +75,26 @@ export const FloorImage: React.FC<
         height={dimensions.height}
         mask={`url(#${maskId})`}
       />
+    </>
+  );
+};
+
+export const FloorImages: React.FC<{
+  viewbox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}> = ({ viewbox }) => {
+  useEnterKeyNavigation();
+  return (
+    <>
+      {imagesState.images.map(({ src, cx, cy }) => {
+        return (
+          <FloorImage key={src} cx={cx} cy={cy} src={src} viewbox={viewbox} />
+        );
+      })}
     </>
   );
 };
