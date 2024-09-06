@@ -65,7 +65,7 @@ export const throttledSendPosition = throttle(
       data: position,
     });
   },
-  100
+  200
 );
 
 export const throttledSendColor = throttle((color: string) => {
@@ -73,7 +73,7 @@ export const throttledSendColor = throttle((color: string) => {
     type: "UpdateColor",
     data: color,
   });
-}, 100);
+}, 200);
 
 export const sendReaction = (reaction: string) => {
   sendCommand({

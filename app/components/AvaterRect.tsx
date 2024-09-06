@@ -22,7 +22,13 @@ export const AvaterRect: React.FC<AvatarProps> = ({
     y: position.y,
     color: color || "black",
     transform: `translate(${position.x}, ${position.y})`,
-    config: { tension: 400, friction: 35 },
+    config: {
+      tension: 100, // やや高めに設定
+      friction: 24, // 摩擦を少し増やす
+      mass: 2, // 質量を少し増やす
+      clamp: true, // オーバーシュートを防ぐ
+      velocity: 0, // 初速度をゼロに
+    },
   });
   const {
     animationStyle,

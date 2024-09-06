@@ -116,7 +116,7 @@ const ping = () => {
     ) {
       ping();
     }
-  }, 5000);
+  }, 30000);
 };
 
 if (typeof window !== "undefined") {
