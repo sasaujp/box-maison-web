@@ -13,6 +13,7 @@ export type User = {
 export const myState = proxy({
   position: { x: 0, y: 0 },
   reaction: null as { value: string } | null,
+  isAvatarOverLink: false,
 });
 
 export const clearReactionTimer = proxy(

@@ -1,5 +1,6 @@
 import { proxy, subscribe } from "valtio";
 import { myState } from "./avater";
+import { AVATAR_SIZE } from "~/components/MyAvaterdRect";
 
 export type RectRoom = {
   x1: number;
@@ -101,12 +102,19 @@ export const imagesState = proxy({
 
 if (typeof window !== "undefined") {
   subscribe(myState, () => {
-    const { x, y } = myState.position;
-
+    let { x, y } = myState.position;
+    x += AVATAR_SIZE / 2;
+    y += AVATAR_SIZE / 2;
     imagesState.images.sort((a, b) => {
       const d1 = Math.sqrt(Math.pow(x - a.cx, 2) + Math.pow(y - a.cy, 2));
       const d2 = Math.sqrt(Math.pow(x - b.cx, 2) + Math.pow(y - b.cy, 2));
       return d2 - d1;
+    });
+    myState.isAvatarOverLink = imagesState.images.some(({ cx, cy }) => {
+      if (Math.sqrt(Math.pow(x - cx, 2) + Math.pow(y - cy, 2)) < 100) {
+        return true;
+      }
+      return false;
     });
   });
 }

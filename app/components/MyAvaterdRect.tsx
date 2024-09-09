@@ -3,7 +3,7 @@ import { useSpring, animated } from "@react-spring/web";
 import { BUBBLE_REACTIONS, myColor, myState } from "@/states/avater";
 import { useSnapshot } from "valtio";
 import { ReactionBubble } from "./ReactionBubble";
-import { rectRoomsState } from "@/states/meison";
+import { imagesState, rectRoomsState } from "@/states/meison";
 import { calcNewPosition } from "~/lib/moveAvater";
 import { useAvatarAnimation } from "./useAvaterAnimation";
 
@@ -166,14 +166,34 @@ export const MyAvaterdRect: React.FC = () => {
           scale: animationStyle.scale,
           scaleX: animationStyle.scaleX,
           scaleY: animationStyle.scaleY,
+          cursor: my.isAvatarOverLink ? "pointer" : undefined,
           translateY: animationStyle.translateY,
         }}
+        onClick={
+          my.isAvatarOverLink
+            ? () => {
+                const x = my.position.x + AVATAR_SIZE / 2;
+                const y = my.position.y + AVATAR_SIZE / 2;
+                const nearestImage = imagesState.images.find((image) => {
+                  const distance = Math.sqrt(
+                    Math.pow(x - image.cx, 2) + Math.pow(y - image.cy, 2)
+                  );
+                  return distance <= 100;
+                });
+
+                if (nearestImage) {
+                  window.open(nearestImage.url, "_blank", "noreferrer");
+                }
+              }
+            : undefined
+        }
       >
         <animated.rect
           width={AVATAR_SIZE}
           height={AVATAR_SIZE}
           x={0}
           y={0}
+          opacity={my.isAvatarOverLink ? 0.8 : undefined}
           fill={color}
           rx="10"
           ry="10"
@@ -209,6 +229,25 @@ export const MyAvaterdRect: React.FC = () => {
           ry="10"
         />
         <circle cx={37.5} cy={12.5} r="7.5" fill="white" opacity="0.2" />
+        {my.isAvatarOverLink && (
+          <rect
+            x="0"
+            y="0"
+            width="50"
+            height="50"
+            fill="none"
+            stroke="#0000EE"
+            rx="10"
+            ry="10"
+          >
+            <animate
+              attributeName="stroke-width"
+              values="2;6;2"
+              dur="1s"
+              repeatCount="indefinite"
+            />
+          </rect>
+        )}
       </animated.g>
 
       {my.reaction && BUBBLE_REACTIONS.includes(my.reaction.value) && (

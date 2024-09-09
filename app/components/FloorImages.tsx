@@ -8,7 +8,7 @@ import { useEnterKeyNavigation } from "./useEnterKeyNavigation";
 const MAX_WIDTH = 900;
 const MAX_HEIGHT = 700;
 const MIN_SIZE = 50;
-const INTERACTION_DISTANCE = 400;
+export const INTERACTION_DISTANCE = 400;
 
 const FloorImage: React.FC<
   { cx: number; cy: number; src: string } & {

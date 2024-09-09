@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { myState } from "@/states/avater";
 import { imagesState } from "@/states/meison";
 
-const INTERACTION_DISTANCE = 200; // アバターが画像と相互作用できる距離
+const INTERACTION_DISTANCE = 100; // アバターが画像と相互作用できる距離
 
 export const useEnterKeyNavigation = () => {
   useEffect(() => {
