@@ -18,7 +18,7 @@ export default function Index() {
       <h1 className="text-3xl">Welcome to Box-Maison!</h1>
 
       <Button asChild>
-        <Link to="/@hoge">ROOM</Link>
+        <Link to="/@demo">DEMO ROOM</Link>
       </Button>
     </div>
   );
