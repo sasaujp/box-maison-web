@@ -106,10 +106,23 @@ export default function Room() {
           viewBox.y + position.y - viewBox.height / 2 + bounceY
         } ${viewBox.width * zoom} ${viewBox.height * zoom}`}
       >
-        <defs>
-          <path
-            id="rooms-path"
-            d={`
+        {rectRooms.map(({ x1, y1, x2, y2 }, i) => {
+          return (
+            <rect
+              key={i}
+              x={x1}
+              y={y1}
+              width={x2 - x1}
+              height={y2 - y1}
+              className="fill-slate-100 stroke-none"
+            />
+          );
+        })}
+
+        <FloorImages viewbox={viewBox} />
+        <path
+          id="rooms-path"
+          d={`
           M -10000 -10000
           H 10000
           V 10000
@@ -127,25 +140,10 @@ export default function Room() {
             )
             .join(" ")}
         `}
-            fill="black"
-            fillRule="evenodd"
-          />
-        </defs>
-        {/* 部屋の枠 */}
-
-        {rectRooms.map(({ x1, y1, x2, y2 }, i) => {
-          return (
-            <rect
-              key={i}
-              x={x1}
-              y={y1}
-              width={x2 - x1}
-              height={y2 - y1}
-              className="fill-slate-100 stroke-none"
-            />
-          );
-        })}
-        <FloorImages viewbox={viewBox} />
+          fill="black"
+          opacity="0.7"
+          fillRule="evenodd"
+        />
         {/* 他のアバター */}
         {users.users.map(({ id, position, color, reaction }) => {
           if (!position) {

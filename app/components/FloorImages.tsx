@@ -63,7 +63,7 @@ const FloorImage: React.FC<
             rx="20"
             ry="20"
           />
-          <use href="#rooms-path" />
+          {/* <use href="#rooms-path" /> */}
         </mask>
       </defs>
       <image
