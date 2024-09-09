@@ -157,6 +157,11 @@ export const MyAvaterdRect: React.FC = () => {
     performStumble,
   ]);
 
+  const linkAnimation = useSpring({
+    opacity: my.isAvatarOverLink ? 1 : 0,
+    config: { duration: 250 },
+  });
+
   return (
     <animated.g transform={animateTransform.transform}>
       <animated.g
@@ -229,25 +234,24 @@ export const MyAvaterdRect: React.FC = () => {
           ry="10"
         />
         <circle cx={37.5} cy={12.5} r="7.5" fill="white" opacity="0.2" />
-        {my.isAvatarOverLink && (
-          <rect
-            x="0"
-            y="0"
-            width="50"
-            height="50"
-            fill="none"
-            stroke="#0000EE"
-            rx="10"
-            ry="10"
-          >
-            <animate
-              attributeName="stroke-width"
-              values="2;6;2"
-              dur="1s"
-              repeatCount="indefinite"
-            />
-          </rect>
-        )}
+        <animated.rect
+          x="0"
+          y="0"
+          width="50"
+          height="50"
+          fill="none"
+          stroke="#0000EE"
+          rx="10"
+          ry="10"
+          opacity={linkAnimation.opacity}
+        >
+          <animate
+            attributeName="stroke-width"
+            values="2;5;2"
+            dur="1s"
+            repeatCount="indefinite"
+          />
+        </animated.rect>
       </animated.g>
 
       {my.reaction && BUBBLE_REACTIONS.includes(my.reaction.value) && (
