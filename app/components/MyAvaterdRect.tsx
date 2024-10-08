@@ -121,6 +121,10 @@ export const MyAvaterdRect: React.FC = () => {
       roomSvg.releasePointerCapture(e.pointerId);
       setKeys((prevKeys) => ({ ...prevKeys, clientX: null, clientY: null }));
     };
+    roomSvg.addEventListener("touchstart", (e) => {
+      console.log(e);
+      e.preventDefault();
+    });
     roomSvg.addEventListener("pointerdown", handlePointerDown);
     roomSvg.addEventListener("pointermove", handlePointerMove);
     roomSvg.addEventListener("pointerup", handlePointerUp);
@@ -179,7 +183,8 @@ export const MyAvaterdRect: React.FC = () => {
         dx /= magnitude;
         dy /= magnitude;
 
-        const moveDistance = Math.min(distance, SPEED * deltaTime);
+        // マウスだとなんかはやいので、0.8倍にしておく
+        const moveDistance = Math.min(distance, SPEED * 0.8 * deltaTime);
         if (distance < moveDistance) {
           animationFrameId.current = requestAnimationFrame(updatePosition);
           return;
