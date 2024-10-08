@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSpring, animated } from "@react-spring/web";
 import { BUBBLE_REACTIONS, myColor, myState } from "@/states/avater";
+
 import { useSnapshot } from "valtio";
 import { ReactionBubble } from "./ReactionBubble";
 import { imagesState, rectRoomsState } from "@/states/meison";
 import { calcNewPosition } from "~/lib/moveAvater";
 import { useAvatarAnimation } from "./useAvaterAnimation";
+import { svgRectState, viewboxState } from "@/states/ui";
 
 export const AVATAR_SIZE = 50;
 const SPEED = 900; // pixels per second
@@ -20,6 +22,20 @@ type Keys = {
   s: boolean;
   a: boolean;
   d: boolean;
+  clientX: number | null;
+  clientY: number | null;
+};
+
+const clientToSvgCoords = (clientX: number, clientY: number) => {
+  const viewbox = viewboxState.value;
+  return {
+    x:
+      viewbox.x +
+      (clientX - svgRectState.x) * (viewbox.width / svgRectState.width),
+    y:
+      viewbox.y +
+      (clientY - svgRectState.y) * (viewbox.height / svgRectState.height),
+  };
 };
 
 export const MyAvaterdRect: React.FC = () => {
@@ -32,9 +48,12 @@ export const MyAvaterdRect: React.FC = () => {
     s: false,
     a: false,
     d: false,
+    clientX: null,
+    clientY: null,
   });
 
   const my = useSnapshot(myState);
+
   const lastUpdateTime = useRef(Date.now());
   const animationFrameId = useRef<number | null>(null);
   const { rectRooms } = useSnapshot(rectRoomsState);
@@ -69,11 +88,51 @@ export const MyAvaterdRect: React.FC = () => {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
 
+    const roomSvg = document.getElementById(
+      "room-svg"
+    )! as unknown as SVGSVGElement;
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("#my-avater") && my.isAvatarOverLink) {
+        return;
+      }
+
+      roomSvg.setPointerCapture(e.pointerId);
+
+      setKeys((prevKeys) => ({
+        ...prevKeys,
+        clientX: e.clientX,
+        clientY: e.clientY,
+      }));
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!roomSvg.hasPointerCapture(e.pointerId)) {
+        return;
+      }
+      setKeys((prevKeys) => ({
+        ...prevKeys,
+        clientX: e.clientX,
+        clientY: e.clientY,
+      }));
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      roomSvg.releasePointerCapture(e.pointerId);
+      setKeys((prevKeys) => ({ ...prevKeys, clientX: null, clientY: null }));
+    };
+    roomSvg.addEventListener("pointerdown", handlePointerDown);
+    roomSvg.addEventListener("pointermove", handlePointerMove);
+    roomSvg.addEventListener("pointerup", handlePointerUp);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      roomSvg.removeEventListener("pointerdown", handlePointerDown);
+      roomSvg.removeEventListener("pointermove", handlePointerDown);
+      roomSvg.removeEventListener("pointerup", handlePointerUp);
     };
-  }, []);
+  }, [my.isAvatarOverLink]);
 
   useEffect(() => {
     const updatePosition = () => {
@@ -83,27 +142,57 @@ export const MyAvaterdRect: React.FC = () => {
 
       let dx = 0;
       let dy = 0;
+      const { clientX, clientY } = keys;
 
-      if (keys.ArrowUp || keys.w) dy -= 1;
-      if (keys.ArrowDown || keys.s) dy += 1;
-      if (keys.ArrowLeft || keys.a) dx -= 1;
-      if (keys.ArrowRight || keys.d) dx += 1;
+      if (clientX === null || clientY === null) {
+        if (keys.ArrowUp || keys.w) dy -= 1;
+        if (keys.ArrowDown || keys.s) dy += 1;
+        if (keys.ArrowLeft || keys.a) dx -= 1;
+        if (keys.ArrowRight || keys.d) dx += 1;
+
+        if (dx === 0 && dy === 0) {
+          animationFrameId.current = requestAnimationFrame(updatePosition);
+          return;
+        }
+
+        const magnitude = Math.sqrt(dx * dx + dy * dy);
+        dx /= magnitude;
+        dy /= magnitude;
+        // Apply speed
+        dx *= SPEED * deltaTime;
+        dy *= SPEED * deltaTime;
+      } else {
+        const { x, y } = clientToSvgCoords(clientX, clientY);
+
+        const distance = Math.sqrt(
+          Math.pow(x - (my.position.x + AVATAR_SIZE / 2), 2) +
+            Math.pow(y - (my.position.y + AVATAR_SIZE / 2), 2)
+        );
+        if (distance < 1) {
+          animationFrameId.current = requestAnimationFrame(updatePosition);
+          return;
+        }
+
+        dx = x - (my.position.x + AVATAR_SIZE / 2);
+        dy = y - (my.position.y + AVATAR_SIZE / 2);
+        const magnitude = Math.sqrt(dx * dx + dy * dy);
+        dx /= magnitude;
+        dy /= magnitude;
+
+        const moveDistance = Math.min(distance, SPEED * deltaTime);
+        if (distance < moveDistance) {
+          animationFrameId.current = requestAnimationFrame(updatePosition);
+          return;
+        }
+        // 速度を適用
+        dx *= moveDistance;
+        dy *= moveDistance;
+      }
 
       if (dx === 0 && dy === 0) {
         animationFrameId.current = requestAnimationFrame(updatePosition);
         return;
       }
-
-      // Normalize diagonal movement
-      if (dx !== 0 && dy !== 0) {
-        const magnitude = Math.sqrt(dx * dx + dy * dy);
-        dx /= magnitude;
-        dy /= magnitude;
-      }
-
-      // Apply speed
-      dx *= SPEED * deltaTime;
-      dy *= SPEED * deltaTime;
 
       const { newX, newY } = calcNewPosition(
         my.position,
@@ -163,7 +252,7 @@ export const MyAvaterdRect: React.FC = () => {
   });
 
   return (
-    <animated.g transform={animateTransform.transform}>
+    <animated.g id="my-avater" transform={animateTransform.transform}>
       <animated.g
         style={{
           transformOrigin: `${AVATAR_SIZE / 2}px ${AVATAR_SIZE / 2}px`,

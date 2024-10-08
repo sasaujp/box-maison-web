@@ -1,15 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { svgRectState, zoomState } from "../states/ui";
 
 export const useViewBox = () => {
   const screenRef = useRef<HTMLDivElement>(null);
-
-  const [viewBox, setViewBox] = useState({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  });
-  const [zoom, setZoom] = useState(1);
 
   const viewBoxRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
@@ -24,14 +17,13 @@ export const useViewBox = () => {
       } else if (rect.width < 1200) {
         zoom = 1.3;
       }
-      setZoom(zoom);
+      zoomState.value = zoom;
 
-      setViewBox({
-        x: rect.left,
-        y: rect.top,
-        width: rect.width,
-        height: rect.height,
-      });
+      svgRectState.x = rect.left;
+      svgRectState.y = rect.top;
+      svgRectState.width = rect.width;
+      svgRectState.height = rect.height;
+
       viewBoxRef.current = {
         x: rect.left,
         y: rect.top,
@@ -48,5 +40,5 @@ export const useViewBox = () => {
     };
   }, []);
 
-  return { screenRef, viewBox, viewBoxRef, zoom };
+  return { screenRef, viewBoxRef };
 };

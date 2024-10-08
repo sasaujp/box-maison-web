@@ -1,6 +1,7 @@
 import { proxy, subscribe } from "valtio";
 import { myState } from "./avater";
 import { AVATAR_SIZE } from "~/components/MyAvaterdRect";
+import { derive } from "valtio/utils";
 
 export type RectRoom = {
   x1: number;
@@ -98,6 +99,17 @@ export const imagesState = proxy({
       cy: 300,
     },
   ] as ImageStateType[],
+});
+
+export const houseBoxState = derive({
+  value: (get) => {
+    const rectRooms = get(rectRoomsState).rectRooms;
+    const x = Math.min(...rectRooms.map((r) => r.x1));
+    const y = Math.min(...rectRooms.map((r) => r.y1));
+    const width = Math.max(...rectRooms.map((r) => r.x2));
+    const height = Math.max(...rectRooms.map((r) => r.y2));
+    return { x, y, width, height };
+  },
 });
 
 if (typeof window !== "undefined") {

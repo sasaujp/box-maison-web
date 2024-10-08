@@ -12,39 +12,12 @@ import { useSnapshot } from "valtio";
 import { disconnect, websocketState } from "@/states/websocket";
 import { AvaterRect } from "~/components/AvaterRect";
 import Skech from "@uiw/react-color-sketch";
-import { colorPicker } from "@/states/ui";
+import { colorPicker, svgRectState, viewboxState } from "@/states/ui";
 import { useEffect } from "react";
-import { useRects } from "@/hooks/useRects";
 import { rectRoomsState } from "@/states/meison";
 import PatternedColorButton from "~/components/PatternedColorButton";
 import { ReactionButton } from "~/components/ReactionButton";
 import { FloorImages } from "~/components/FloorImages";
-
-function easeOutCirc(x: number): number {
-  return Math.sqrt(1 - Math.pow(x - 1, 2));
-}
-
-const calcSmoothBounce = (
-  pos: number,
-  viewSize: number,
-  roomStart: number,
-  roomSize: number,
-  easeFunc: (x: number) => number
-) => {
-  // 端から画面サイズの半分の位置で調整を開始
-  const edgeThreshold = Math.min(viewSize * 0.7, (roomSize - roomStart) * 0.5);
-  let bounce = 0;
-  if (pos < roomStart + edgeThreshold) {
-    const factor = (roomStart + edgeThreshold - pos) * 0.5;
-    bounce = factor;
-    bounce = easeFunc(factor / (edgeThreshold / 2)) * factor;
-  } else if (pos > roomStart + roomSize - edgeThreshold) {
-    const factor = -(pos - (roomStart + roomSize - edgeThreshold)) * 0.5;
-    bounce = easeFunc(-factor / (edgeThreshold / 2)) * factor;
-  }
-
-  return bounce;
-};
 
 export default function Room() {
   const { roomName } = useParams();
@@ -60,13 +33,13 @@ export default function Room() {
 
   websocketState.roomId = handle;
 
-  const { viewBox, screenRef, zoom } = useViewBox();
+  const { screenRef } = useViewBox();
   const users = useSnapshot(usersState);
   const { color } = useSnapshot(myColor);
   const { isOpen } = useSnapshot(colorPicker);
-  const { position } = useSnapshot(myState);
-  const { houseBox } = useRects();
   const { rectRooms } = useSnapshot(rectRoomsState);
+  const svgRect = useSnapshot(svgRectState);
+  const viewbox = useSnapshot(viewboxState).value;
 
   useEffect(() => {
     const rect = rectRoomsState.rectRooms[0];
@@ -79,32 +52,17 @@ export default function Room() {
     };
   }, []);
 
-  const bounceX = calcSmoothBounce(
-    position.x,
-    viewBox.width,
-    houseBox.x,
-    houseBox.width,
-    easeOutCirc
-  );
-  const bounceY = calcSmoothBounce(
-    position.y,
-    viewBox.height,
-    houseBox.y,
-    houseBox.height,
-    easeOutCirc
-  );
   return (
     <div className={cn("h-screen", "w-screen")} ref={screenRef}>
       <svg
+        id="room-svg"
         onClick={() => {
           colorPicker.isOpen = false;
         }}
         className="bg-black"
-        width={viewBox.width}
-        height={viewBox.height}
-        viewBox={`${viewBox.x + position.x - viewBox.width / 2 + bounceX} ${
-          viewBox.y + position.y - viewBox.height / 2 + bounceY
-        } ${viewBox.width * zoom} ${viewBox.height * zoom}`}
+        width={svgRect.width}
+        height={svgRect.height}
+        viewBox={`${viewbox.x} ${viewbox.y} ${viewbox.width} ${viewbox.height}`}
       >
         {rectRooms.map(({ x1, y1, x2, y2 }, i) => {
           return (
@@ -119,7 +77,7 @@ export default function Room() {
           );
         })}
 
-        <FloorImages viewbox={viewBox} />
+        <FloorImages viewbox={viewbox} />
         <path
           id="rooms-path"
           d={`
