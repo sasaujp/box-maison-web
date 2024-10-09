@@ -120,8 +120,27 @@ export default function Room() {
         {/* 自分のアバター */}
         <MyAvaterdRect />
       </svg>
-      <div className="absolute bottom-8 right-8 flex flex-col-reverse justify-start items-center">
-        <div className="bg-yellow-50/50 w-64 shadow-2xl rounded-2xl p-4">
+      <div className="absolute bottom-4 right-4 flex flex-row-reverse justify-end items-end gap-2">
+        <div className="bg-yellow-50/50 shadow-2xl rounded-2xl p-4 flex flex-col gap-2">
+          <PatternedColorButton
+            onClick={() => {
+              colorPicker.isOpen = !colorPicker.isOpen;
+            }}
+            className="rounded-full w-10 h-10"
+            color={color}
+          />
+          {BUBBLE_REACTIONS.map((reaction) => {
+            return <ReactionButton key={reaction} reaction={reaction} />;
+          })}
+          <ReactionButton reaction={"1"} />
+          <ReactionButton reaction={"2"} />
+          <ReactionButton reaction={"3"} />
+          <ReactionButton reaction={"4"} />
+          <ReactionButton reaction={"5"} />
+        </div>
+
+        {/* <div className="absolute bottom-8 right-8 flex flex-col-reverse justify-start items-center">
+        <div className="bg-yellow-50/50 w-64 shadow-2xl rounded-2xl p-4 mt-4">
           <div className="flex w-full justify-center">
             <PatternedColorButton
               onClick={() => {
@@ -144,14 +163,14 @@ export default function Room() {
             <ReactionButton reaction={"4"} />
             <ReactionButton reaction={"5"} />
           </div>
-        </div>
+        </div> */}
         {isOpen && (
           <Skech
             disableAlpha={true}
             onChange={(color) => {
               myColor.color = color.hex;
             }}
-            className="border-t-0 mb-4"
+            className="border-t-0"
           />
         )}
       </div>

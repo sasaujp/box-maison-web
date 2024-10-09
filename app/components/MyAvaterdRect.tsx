@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSpring, animated } from "@react-spring/web";
 import { BUBBLE_REACTIONS, myColor, myState } from "@/states/avater";
 
@@ -10,7 +10,7 @@ import { useAvatarAnimation } from "./useAvaterAnimation";
 import { svgRectState, viewboxState } from "@/states/ui";
 
 export const AVATAR_SIZE = 50;
-const SPEED = 900; // pixels per second
+const SPEED = 600; // pixels per second
 const POSITION_UPDATE_THRESHOLD = 0.1;
 
 type Keys = {
@@ -65,6 +65,8 @@ export const MyAvaterdRect: React.FC = () => {
     performBow,
     performStumble,
   } = useAvatarAnimation();
+
+  const [touchStartMyAvater, setTouchStartMyAvater] = useState(false);
 
   const animateTransform = useSpring({
     transform: `translate(${my.position.x}, ${my.position.y})`,
@@ -122,9 +124,12 @@ export const MyAvaterdRect: React.FC = () => {
       setKeys((prevKeys) => ({ ...prevKeys, clientX: null, clientY: null }));
     };
     roomSvg.addEventListener("touchstart", (e) => {
-      console.log(e);
       e.preventDefault();
     });
+    roomSvg.addEventListener("touchend", (e) => {
+      e.preventDefault();
+    });
+
     roomSvg.addEventListener("pointerdown", handlePointerDown);
     roomSvg.addEventListener("pointermove", handlePointerMove);
     roomSvg.addEventListener("pointerup", handlePointerUp);
@@ -184,7 +189,7 @@ export const MyAvaterdRect: React.FC = () => {
         dy /= magnitude;
 
         // マウスだとなんかはやいので、0.8倍にしておく
-        const moveDistance = Math.min(distance, SPEED * 0.8 * deltaTime);
+        const moveDistance = Math.min(distance, SPEED * deltaTime);
         if (distance < moveDistance) {
           animationFrameId.current = requestAnimationFrame(updatePosition);
           return;
@@ -256,8 +261,37 @@ export const MyAvaterdRect: React.FC = () => {
     config: { duration: 250 },
   });
 
+  const onClickLink = useCallback(() => {
+    const x = my.position.x + AVATAR_SIZE / 2;
+    const y = my.position.y + AVATAR_SIZE / 2;
+    const nearestImage = imagesState.images.find((image) => {
+      const distance = Math.sqrt(
+        Math.pow(x - image.cx, 2) + Math.pow(y - image.cy, 2)
+      );
+      return distance <= 100;
+    });
+
+    if (nearestImage) {
+      window.open(nearestImage.url, "_blank", "noreferrer");
+    }
+  }, [my.position.x, my.position.y]);
+
   return (
-    <animated.g id="my-avater" transform={animateTransform.transform}>
+    <animated.g
+      id="my-avater"
+      transform={animateTransform.transform}
+      onTouchStart={(e) => {
+        setTouchStartMyAvater(true);
+        e.preventDefault();
+      }}
+      onTouchEnd={(e) => {
+        if (touchStartMyAvater && my.isAvatarOverLink) {
+          onClickLink();
+        }
+        setTouchStartMyAvater(false);
+        e.preventDefault();
+      }}
+    >
       <animated.g
         style={{
           transformOrigin: `${AVATAR_SIZE / 2}px ${AVATAR_SIZE / 2}px`,
@@ -268,24 +302,7 @@ export const MyAvaterdRect: React.FC = () => {
           cursor: my.isAvatarOverLink ? "pointer" : undefined,
           translateY: animationStyle.translateY,
         }}
-        onClick={
-          my.isAvatarOverLink
-            ? () => {
-                const x = my.position.x + AVATAR_SIZE / 2;
-                const y = my.position.y + AVATAR_SIZE / 2;
-                const nearestImage = imagesState.images.find((image) => {
-                  const distance = Math.sqrt(
-                    Math.pow(x - image.cx, 2) + Math.pow(y - image.cy, 2)
-                  );
-                  return distance <= 100;
-                });
-
-                if (nearestImage) {
-                  window.open(nearestImage.url, "_blank", "noreferrer");
-                }
-              }
-            : undefined
-        }
+        onClick={my.isAvatarOverLink ? onClickLink : undefined}
       >
         <animated.rect
           width={AVATAR_SIZE}
