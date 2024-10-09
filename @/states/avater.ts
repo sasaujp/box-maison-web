@@ -79,7 +79,7 @@ if (typeof window !== "undefined") {
       myColor.color = parsedColor.color;
     }
   };
-  console.log(document.readyState);
+
   if (
     document.readyState === "complete" ||
     document.readyState === "interactive"
