@@ -20,9 +20,7 @@ export const clearReactionTimer = proxy(
   ref<Record<string, NodeJS.Timeout>>({})
 );
 
-export const myColor = proxy({
-  color: "black",
-});
+export const myColor = proxy({ color: "#000000" });
 
 export const usersState = proxy<{ users: ({ id: string } & User)[] }>({
   users: [],
@@ -73,6 +71,26 @@ export const updateActiveUsers = (userIds: string[]) => {
 };
 
 if (typeof window !== "undefined") {
+  const updateColorFromLocalStorage = () => {
+    console.log("updateColorFromLocalStorage");
+    const storedColor = localStorage.getItem("myColor");
+    if (storedColor) {
+      const parsedColor = JSON.parse(storedColor);
+      myColor.color = parsedColor.color;
+    }
+  };
+  console.log(document.readyState);
+  if (
+    document.readyState === "complete" ||
+    document.readyState === "interactive"
+  ) {
+    setTimeout(updateColorFromLocalStorage, 50);
+  }
+
+  subscribe(myColor, () => {
+    console.log(myColor.color);
+    localStorage.setItem("myColor", JSON.stringify(myColor));
+  });
   subscribe(myState, () => {
     if (websocketState.isConnected && websocketState.socketRef.socket) {
       throttledSendPosition(myState.position);

@@ -35,7 +35,6 @@ export const websocketConnect = (roomId: string) => {
   ws.onmessage = (event) => {
     try {
       const response: ServerResponse = JSON.parse(event.data);
-      console.log("Received:", response);
 
       switch (response.type) {
         case "CurrentStatus":
